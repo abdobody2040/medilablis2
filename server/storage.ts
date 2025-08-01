@@ -1,0 +1,359 @@
+import { 
+  users, patients, samples, testRequests, testResults, testTypes, 
+  qualityControls, outboundSamples, worklists, financialRecords,
+  type User, type InsertUser, type Patient, type InsertPatient,
+  type Sample, type InsertSample, type TestRequest, type InsertTestRequest,
+  type TestResult, type InsertTestResult, type TestType, type InsertTestType,
+  type QualityControl, type InsertQualityControl
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc, asc, like, count, sum, avg } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+
+export interface IStorage {
+  // User operations
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
+  validateUserPassword(username: string, password: string): Promise<User | null>;
+  
+  // Patient operations
+  getPatient(id: string): Promise<Patient | undefined>;
+  getPatientByPatientId(patientId: string): Promise<Patient | undefined>;
+  createPatient(patient: InsertPatient): Promise<Patient>;
+  updatePatient(id: string, patient: Partial<InsertPatient>): Promise<Patient>;
+  searchPatients(query: string): Promise<Patient[]>;
+  getRecentPatients(limit: number): Promise<Patient[]>;
+  
+  // Sample operations
+  getSample(id: string): Promise<Sample | undefined>;
+  getSampleBySampleId(sampleId: string): Promise<Sample | undefined>;
+  createSample(sample: InsertSample): Promise<Sample>;
+  updateSample(id: string, sample: Partial<InsertSample>): Promise<Sample>;
+  getRecentSamples(limit: number): Promise<Array<Sample & { patient: Patient }>>;
+  getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>>;
+  getDailySamplesCount(): Promise<number>;
+  
+  // Test operations
+  getTestTypes(): Promise<TestType[]>;
+  createTestType(testType: InsertTestType): Promise<TestType>;
+  createTestRequest(testRequest: InsertTestRequest): Promise<TestRequest>;
+  getTestRequestsForSample(sampleId: string): Promise<TestRequest[]>;
+  getPendingTestsCount(): Promise<number>;
+  
+  // Results operations
+  createTestResult(result: InsertTestResult): Promise<TestResult>;
+  getTestResults(testRequestId: string): Promise<TestResult[]>;
+  getCompletedResultsCount(): Promise<number>;
+  
+  // Quality Control operations
+  createQualityControl(qc: InsertQualityControl): Promise<QualityControl>;
+  getRecentQualityControls(limit: number): Promise<Array<QualityControl & { testType: TestType }>>;
+  
+  // Dashboard statistics
+  getDashboardStats(): Promise<{
+    dailySamples: number;
+    resultsReady: number;
+    pendingTests: number;
+    activeUsers: number;
+  }>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const hashedPassword = await bcrypt.hash(insertUser.password, 12);
+    const [user] = await db
+      .insert(users)
+      .values({ ...insertUser, password: hashedPassword })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updateUser: Partial<InsertUser>): Promise<User> {
+    const updateData = { ...updateUser };
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 12);
+    }
+    
+    const [user] = await db
+      .update(users)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async validateUserPassword(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
+  }
+
+  async getPatient(id: string): Promise<Patient | undefined> {
+    const [patient] = await db.select().from(patients).where(eq(patients.id, id));
+    return patient || undefined;
+  }
+
+  async getPatientByPatientId(patientId: string): Promise<Patient | undefined> {
+    const [patient] = await db.select().from(patients).where(eq(patients.patientId, patientId));
+    return patient || undefined;
+  }
+
+  async createPatient(insertPatient: InsertPatient): Promise<Patient> {
+    const [patient] = await db
+      .insert(patients)
+      .values(insertPatient)
+      .returning();
+    return patient;
+  }
+
+  async updatePatient(id: string, updatePatient: Partial<InsertPatient>): Promise<Patient> {
+    const [patient] = await db
+      .update(patients)
+      .set({ ...updatePatient, updatedAt: new Date() })
+      .where(eq(patients.id, id))
+      .returning();
+    return patient;
+  }
+
+  async searchPatients(query: string): Promise<Patient[]> {
+    return await db
+      .select()
+      .from(patients)
+      .where(
+        like(patients.firstName, `%${query}%`) ||
+        like(patients.lastName, `%${query}%`) ||
+        like(patients.patientId, `%${query}%`)
+      )
+      .limit(50);
+  }
+
+  async getRecentPatients(limit: number): Promise<Patient[]> {
+    return await db
+      .select()
+      .from(patients)
+      .orderBy(desc(patients.createdAt))
+      .limit(limit);
+  }
+
+  async getSample(id: string): Promise<Sample | undefined> {
+    const [sample] = await db.select().from(samples).where(eq(samples.id, id));
+    return sample || undefined;
+  }
+
+  async getSampleBySampleId(sampleId: string): Promise<Sample | undefined> {
+    const [sample] = await db.select().from(samples).where(eq(samples.sampleId, sampleId));
+    return sample || undefined;
+  }
+
+  async createSample(insertSample: InsertSample): Promise<Sample> {
+    const [sample] = await db
+      .insert(samples)
+      .values(insertSample)
+      .returning();
+    return sample;
+  }
+
+  async updateSample(id: string, updateSample: Partial<InsertSample>): Promise<Sample> {
+    const [sample] = await db
+      .update(samples)
+      .set({ ...updateSample, updatedAt: new Date() })
+      .where(eq(samples.id, id))
+      .returning();
+    return sample;
+  }
+
+  async getRecentSamples(limit: number): Promise<Array<Sample & { patient: Patient }>> {
+    const result = await db
+      .select()
+      .from(samples)
+      .innerJoin(patients, eq(samples.patientId, patients.id))
+      .orderBy(desc(samples.createdAt))
+      .limit(limit);
+
+    return result.map(row => ({
+      ...row.samples,
+      patient: row.patients
+    }));
+  }
+
+  async getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>> {
+    const result = await db
+      .select()
+      .from(samples)
+      .innerJoin(patients, eq(samples.patientId, patients.id))
+      .where(eq(samples.status, status as any))
+      .orderBy(desc(samples.createdAt));
+
+    return result.map(row => ({
+      ...row.samples,
+      patient: row.patients
+    }));
+  }
+
+  async getDailySamplesCount(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [result] = await db
+      .select({ count: count() })
+      .from(samples)
+      .where(eq(samples.receivedDateTime >= today as any, true));
+    
+    return result.count;
+  }
+
+  async getTestTypes(): Promise<TestType[]> {
+    return await db
+      .select()
+      .from(testTypes)
+      .where(eq(testTypes.isActive, true))
+      .orderBy(asc(testTypes.name));
+  }
+
+  async createTestType(insertTestType: InsertTestType): Promise<TestType> {
+    const [testType] = await db
+      .insert(testTypes)
+      .values(insertTestType)
+      .returning();
+    return testType;
+  }
+
+  async createTestRequest(insertTestRequest: InsertTestRequest): Promise<TestRequest> {
+    const [testRequest] = await db
+      .insert(testRequests)
+      .values(insertTestRequest)
+      .returning();
+    return testRequest;
+  }
+
+  async getTestRequestsForSample(sampleId: string): Promise<TestRequest[]> {
+    return await db
+      .select()
+      .from(testRequests)
+      .where(eq(testRequests.sampleId, sampleId))
+      .orderBy(desc(testRequests.requestDateTime));
+  }
+
+  async getPendingTestsCount(): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(testRequests)
+      .where(eq(testRequests.status, "pending"));
+    
+    return result.count;
+  }
+
+  async createTestResult(insertTestResult: InsertTestResult): Promise<TestResult> {
+    const [testResult] = await db
+      .insert(testResults)
+      .values(insertTestResult)
+      .returning();
+    return testResult;
+  }
+
+  async getTestResults(testRequestId: string): Promise<TestResult[]> {
+    return await db
+      .select()
+      .from(testResults)
+      .where(eq(testResults.testRequestId, testRequestId))
+      .orderBy(asc(testResults.parameterId));
+  }
+
+  async getCompletedResultsCount(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [result] = await db
+      .select({ count: count() })
+      .from(testRequests)
+      .where(
+        and(
+          eq(testRequests.status, "completed"),
+          eq(testRequests.completedDateTime >= today as any, true)
+        )
+      );
+    
+    return result.count;
+  }
+
+  async createQualityControl(insertQualityControl: InsertQualityControl): Promise<QualityControl> {
+    const [qualityControl] = await db
+      .insert(qualityControls)
+      .values(insertQualityControl)
+      .returning();
+    return qualityControl;
+  }
+
+  async getRecentQualityControls(limit: number): Promise<Array<QualityControl & { testType: TestType }>> {
+    const result = await db
+      .select()
+      .from(qualityControls)
+      .innerJoin(testTypes, eq(qualityControls.testTypeId, testTypes.id))
+      .orderBy(desc(qualityControls.runDateTime))
+      .limit(limit);
+
+    return result.map(row => ({
+      ...row.quality_controls,
+      testType: row.test_types
+    }));
+  }
+
+  async getDashboardStats(): Promise<{
+    dailySamples: number;
+    resultsReady: number;
+    pendingTests: number;
+    activeUsers: number;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [dailySamples] = await db
+      .select({ count: count() })
+      .from(samples)
+      .where(eq(samples.receivedDateTime >= today as any, true));
+
+    const [resultsReady] = await db
+      .select({ count: count() })
+      .from(testRequests)
+      .where(eq(testRequests.status, "completed"));
+
+    const [pendingTests] = await db
+      .select({ count: count() })
+      .from(testRequests)
+      .where(eq(testRequests.status, "pending"));
+
+    const [activeUsers] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.isActive, true));
+
+    return {
+      dailySamples: dailySamples.count,
+      resultsReady: resultsReady.count,
+      pendingTests: pendingTests.count,
+      activeUsers: activeUsers.count,
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
