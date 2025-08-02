@@ -424,11 +424,24 @@ export default function Outbound() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                console.log(`Viewing details for sample: ${sample.sampleId}`);
+                                alert(`Viewing details for sample ${sample.sampleId}`);
+                              }}
+                            >
                               View Details
                             </Button>
                             {sample.status === 'results_ready' && (
-                              <Button size="sm">
+                              <Button 
+                                size="sm"
+                                onClick={() => {
+                                  console.log(`Importing results for sample: ${sample.sampleId}`);
+                                  alert(`Importing results for sample ${sample.sampleId}`);
+                                }}
+                              >
                                 Import Results
                               </Button>
                             )}

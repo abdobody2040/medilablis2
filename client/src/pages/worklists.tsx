@@ -228,10 +228,25 @@ export default function Worklists() {
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          console.log(`Viewing details for worklist: ${worklist.name}`);
+                          alert(`Viewing details for ${worklist.name}`);
+                        }}
+                      >
                         View Details
                       </Button>
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          console.log(`Starting work on: ${worklist.name}`);
+                          alert(`Starting work on ${worklist.name}`);
+                        }}
+                      >
                         Start Work
                       </Button>
                     </div>

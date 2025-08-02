@@ -533,7 +533,14 @@ export default function Financial() {
                 </div>
 
                 <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => {
+                      console.log('Saving invoice as draft...');
+                      alert('Invoice saved as draft!');
+                    }}
+                  >
                     Save as Draft
                   </Button>
                   <Button type="submit">

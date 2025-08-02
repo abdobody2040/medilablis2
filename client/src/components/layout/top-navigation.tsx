@@ -31,8 +31,10 @@ export function TopNavigation() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement search functionality
     console.log('Searching for:', searchQuery);
+    if (searchQuery.trim()) {
+      alert(`Searching for: "${searchQuery}"\n\nSearch functionality will be implemented to find patients, samples, and results.`);
+    }
   };
 
   return (

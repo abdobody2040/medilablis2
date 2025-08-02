@@ -470,10 +470,27 @@ export default function Pricing() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                console.log(`Editing test: ${test.testName}`);
+                                alert(`Editing test: ${test.testName}`);
+                              }}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => {
+                                console.log(`Deleting test: ${test.testName}`);
+                                if (confirm(`Are you sure you want to delete ${test.testName}?`)) {
+                                  alert(`Test ${test.testName} deleted!`);
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

@@ -712,7 +712,10 @@ export function PatientRegistration() {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={clearForm}
+              onClick={() => {
+                console.log('Clearing patient registration form...');
+                clearForm();
+              }}
               disabled={isCreating}
             >
               Clear All

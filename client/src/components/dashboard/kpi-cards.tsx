@@ -102,15 +102,12 @@ export function KPICards() {
                   <span className={`font-medium ${
                     kpi.changeType === 'positive' 
                       ? 'text-green-600' 
-                      : kpi.changeType === 'negative' 
-                      ? 'text-red-600' 
                       : 'text-blue-600'
                   }`}>
                     {kpi.change}
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 ml-1">
                     {kpi.changeType === 'positive' ? 'from yesterday' : 
-                     kpi.changeType === 'negative' ? 'below target' : 
                      kpi.name === 'Pending Tests' ? 'avg turnaround' : 
                      'across all modules'}
                   </span>

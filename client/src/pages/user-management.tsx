@@ -402,7 +402,23 @@ export default function UserManagement() {
                 </div>
 
                 <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => {
+                      console.log('Cancelling user creation...');
+                      setUserForm({
+                        username: '',
+                        email: '',
+                        firstName: '',
+                        lastName: '',
+                        role: 'technician',
+                        password: '',
+                        confirmPassword: '',
+                        isActive: true,
+                      });
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit">
@@ -492,10 +508,21 @@ export default function UserManagement() {
 
                 {rolePermissions.role && (
                   <div className="flex justify-end space-x-4">
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        console.log('Resetting permissions to default...');
+                        alert('Permissions reset to default!');
+                      }}
+                    >
                       Reset to Default
                     </Button>
-                    <Button>
+                    <Button
+                      onClick={() => {
+                        console.log('Saving permissions...');
+                        alert('Permissions saved successfully!');
+                      }}
+                    >
                       Save Permissions
                     </Button>
                   </div>

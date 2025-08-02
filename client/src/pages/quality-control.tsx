@@ -317,7 +317,22 @@ export default function QualityControl() {
                 </div>
 
                 <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => {
+                      console.log('Clearing QC form...');
+                      setQcForm({
+                        testType: '',
+                        qcLevel: '',
+                        lotNumber: '',
+                        expectedValue: '',
+                        actualValue: '',
+                        tolerance: '',
+                        comments: '',
+                      });
+                    }}
+                  >
                     Clear
                   </Button>
                   <Button type="submit">

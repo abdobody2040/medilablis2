@@ -39,7 +39,13 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 flex md:ml-4 md:mt-0 gap-3">
-            <Button variant="outline">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                console.log('Exporting dashboard report...');
+                alert('Report export feature coming soon!');
+              }}
+            >
               <Download className="mr-2 h-4 w-4" />
               Export Report
             </Button>
