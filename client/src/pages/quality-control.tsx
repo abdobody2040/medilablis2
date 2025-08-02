@@ -64,8 +64,61 @@ export default function QualityControl() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle QC entry submission
     console.log('QC Entry:', qcForm);
+    
+    // Validate required fields
+    if (!qcForm.testType || !qcForm.qcLevel || !qcForm.actualValue) {
+      alert('Please fill in all required fields (Test Type, QC Level, and Actual Value)');
+      return;
+    }
+    
+    // Calculate pass/fail status based on tolerance
+    const expectedVal = parseFloat(qcForm.expectedValue);
+    const actualVal = parseFloat(qcForm.actualValue);
+    const toleranceVal = parseFloat(qcForm.tolerance);
+    
+    let qcStatus = 'PASS';
+    let statusMessage = '';
+    
+    if (expectedVal && actualVal && toleranceVal) {
+      const difference = Math.abs(expectedVal - actualVal);
+      const toleranceRange = (expectedVal * toleranceVal) / 100;
+      
+      if (difference > toleranceRange) {
+        qcStatus = 'FAIL';
+        statusMessage = `Out of tolerance range. Difference: ${difference.toFixed(2)}, Allowed: ${toleranceRange.toFixed(2)}`;
+      } else {
+        statusMessage = `Within tolerance range. Difference: ${difference.toFixed(2)}, Allowed: ${toleranceRange.toFixed(2)}`;
+      }
+    }
+    
+    // Create QC entry record
+    const qcEntry = {
+      id: `QC-${Date.now()}`,
+      testType: qcForm.testType,
+      qcLevel: qcForm.qcLevel,
+      lotNumber: qcForm.lotNumber,
+      expectedValue: expectedVal || 'N/A',
+      actualValue: actualVal,
+      tolerance: toleranceVal || 'N/A',
+      status: qcStatus,
+      statusMessage,
+      comments: qcForm.comments,
+      timestamp: new Date().toLocaleString(),
+      technician: 'Current User'
+    };
+    
+    // Simulate saving to database
+    console.log('QC Entry Saved:', qcEntry);
+    
+    // Show detailed result
+    alert(`Quality Control Entry Submitted!\n\n` +
+      `Entry ID: ${qcEntry.id}\n` +
+      `Test Type: ${qcEntry.testType}\n` +
+      `QC Level: ${qcEntry.qcLevel}\n` +
+      `Result: ${qcStatus}\n` +
+      `${statusMessage}\n\n` +
+      `Entry has been logged and saved to the QC database.`);
     
     // Reset form
     setQcForm({

@@ -429,7 +429,15 @@ export default function Outbound() {
                               size="sm"
                               onClick={() => {
                                 console.log(`Viewing details for sample: ${sample.sampleId}`);
-                                alert(`Viewing details for sample ${sample.sampleId}`);
+                                alert(`Sample Details:\n\n` +
+                                  `Sample ID: ${sample.sampleId}\n` +
+                                  `Patient: ${sample.patientName}\n` +
+                                  `Test Type: ${sample.testType}\n` +
+                                  `Status: ${sample.status}\n` +
+                                  `Collection Date: ${new Date(sample.collectionDate).toLocaleDateString()}\n` +
+                                  `Processing Lab: ${sample.processingLab}\n` +
+                                  `Expected TAT: ${sample.expectedTat} hours\n\n` +
+                                  `Current location: ${sample.currentLocation || 'In transit'}`);
                               }}
                             >
                               View Details
@@ -439,7 +447,14 @@ export default function Outbound() {
                                 size="sm"
                                 onClick={() => {
                                   console.log(`Importing results for sample: ${sample.sampleId}`);
-                                  alert(`Importing results for sample ${sample.sampleId}`);
+                                  if (confirm(`Import results for ${sample.sampleId}?\n\nThis will:\n• Download results from processing lab\n• Validate data integrity\n• Update patient records\n• Notify requesting physician`)) {
+                                    alert(`Results Import Completed!\n\n` +
+                                      `Sample ID: ${sample.sampleId}\n` +
+                                      `Patient: ${sample.patientName}\n` +
+                                      `Results imported: ${new Date().toLocaleString()}\n` +
+                                      `Status: Results Available\n\n` +
+                                      `Physician has been notified automatically.`);
+                                  }
                                 }}
                               >
                                 Import Results

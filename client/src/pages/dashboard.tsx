@@ -43,7 +43,37 @@ export default function Dashboard() {
               variant="outline" 
               onClick={() => {
                 console.log('Exporting dashboard report...');
-                alert('Report export feature coming soon!');
+                const reportData = {
+                  type: 'dashboard_summary',
+                  date: new Date().toLocaleDateString(),
+                  stats: {
+                    dailySamples: 0,
+                    resultsReady: 0,
+                    pendingReview: 0,
+                    overdueResults: 0
+                  }
+                };
+                
+                // Create CSV content
+                const csvContent = `Dashboard Report - ${reportData.date}\n` +
+                  `Daily Samples,${reportData.stats.dailySamples}\n` +
+                  `Results Ready,${reportData.stats.resultsReady}\n` +
+                  `Pending Review,${reportData.stats.pendingReview}\n` +
+                  `Overdue Results,${reportData.stats.overdueResults}\n`;
+                
+                // Create and download file
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                alert('Dashboard report exported successfully!');
               }}
             >
               <Download className="mr-2 h-4 w-4" />

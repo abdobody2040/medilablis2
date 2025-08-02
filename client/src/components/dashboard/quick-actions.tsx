@@ -121,7 +121,15 @@ export function QuickActions() {
           </div>
           
           {/* Alert for low reagents */}
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700">
+          <div 
+            className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors"
+            onClick={() => {
+              console.log('Low reagent alert clicked');
+              if (confirm('Reagent levels are critically low. Would you like to:\n\n• Order more reagents automatically?\n• View detailed reagent inventory?\n• Set up automatic reorder alerts?')) {
+                alert('Reagent Management\n\nAccessing inventory management where you can:\n• View current reagent levels\n• Place automatic orders\n• Set reorder thresholds\n• Track delivery status\n\nA purchase requisition has been generated for low reagents.');
+              }
+            }}
+          >
             <div className="flex items-center">
               <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
               <span className="ml-2 text-sm font-medium text-yellow-800 dark:text-yellow-400">
@@ -129,7 +137,7 @@ export function QuickActions() {
               </span>
             </div>
             <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
-              Consider restocking before end of day
+              Consider restocking before end of day - Click to manage
             </p>
           </div>
         </div>

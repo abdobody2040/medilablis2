@@ -80,6 +80,69 @@ export default function Financial() {
     e.preventDefault();
     console.log('Creating invoice:', invoiceForm);
     
+    // Validate required fields
+    if (!invoiceForm.patientId || !invoiceForm.description || !invoiceForm.amount) {
+      alert('Please fill in all required fields (Patient ID, Description, Amount)');
+      return;
+    }
+    
+    // Validate amount
+    const amount = parseFloat(invoiceForm.amount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    
+    // Generate invoice
+    const invoice = {
+      id: `INV-${Date.now()}`,
+      invoiceNumber: `INV-2024-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+      patientId: invoiceForm.patientId,
+      description: invoiceForm.description,
+      amount: amount,
+      paymentMethod: invoiceForm.paymentMethod,
+      dueDate: invoiceForm.dueDate,
+      invoiceDate: new Date().toLocaleDateString(),
+      paymentStatus: 'pending'
+    };
+    
+    // Create invoice content for download
+    const invoiceContent = `
+LABORATORY INVOICE
+==================
+
+Invoice #: ${invoice.invoiceNumber}
+Date: ${invoice.invoiceDate}
+Due Date: ${invoice.dueDate}
+
+Patient ID: ${invoice.patientId}
+Services: ${invoice.description}
+Amount: $${invoice.amount.toFixed(2)}
+Payment Method: ${invoice.paymentMethod}
+Status: ${invoice.paymentStatus}
+
+Thank you for choosing our laboratory services!
+    `.trim();
+    
+    // Create and download invoice file
+    const blob = new Blob([invoiceContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `invoice-${invoice.invoiceNumber}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    alert(`Invoice Created Successfully!\n\n` +
+      `Invoice #: ${invoice.invoiceNumber}\n` +
+      `Patient ID: ${invoice.patientId}\n` +
+      `Amount: $${invoice.amount.toFixed(2)}\n` +
+      `Due Date: ${invoice.dueDate}\n\n` +
+      `Invoice has been generated and downloaded.`);
+    
     // Reset form
     setInvoiceForm({
       patientId: '',
@@ -437,11 +500,37 @@ export default function Financial() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                console.log(`Viewing transaction details: ${transaction.invoiceNumber}`);
+                                alert(`Transaction Details:\n\n` +
+                                  `Invoice: ${transaction.invoiceNumber}\n` +
+                                  `Patient: ${transaction.patientName}\n` +
+                                  `Amount: $${transaction.amount.toFixed(2)}\n` +
+                                  `Status: ${transaction.paymentStatus}\n` +
+                                  `Method: ${transaction.paymentMethod}\n` +
+                                  `Date: ${new Date(transaction.transactionDate).toLocaleDateString()}\n` +
+                                  `Due: ${new Date(transaction.dueDate).toLocaleDateString()}`);
+                              }}
+                            >
                               View
                             </Button>
                             {transaction.paymentStatus === 'pending' && (
-                              <Button size="sm">
+                              <Button 
+                                size="sm"
+                                onClick={() => {
+                                  console.log(`Processing payment for: ${transaction.invoiceNumber}`);
+                                  if (confirm(`Process payment of $${transaction.amount.toFixed(2)} for ${transaction.patientName}?`)) {
+                                    alert(`Payment processed successfully!\n\n` +
+                                      `Invoice: ${transaction.invoiceNumber}\n` +
+                                      `Amount: $${transaction.amount.toFixed(2)}\n` +
+                                      `Status: Paid\n` +
+                                      `Processed: ${new Date().toLocaleString()}`);
+                                  }
+                                }}
+                              >
                                 Process Payment
                               </Button>
                             )}
@@ -538,7 +627,25 @@ export default function Financial() {
                     variant="outline"
                     onClick={() => {
                       console.log('Saving invoice as draft...');
-                      alert('Invoice saved as draft!');
+                      
+                      if (!invoiceForm.patientId) {
+                        alert('Please enter at least a Patient ID to save as draft');
+                        return;
+                      }
+                      
+                      const draftInvoice = {
+                        draftId: `DRAFT-${Date.now()}`,
+                        ...invoiceForm,
+                        savedDate: new Date().toLocaleString(),
+                        status: 'Draft'
+                      };
+                      
+                      console.log('Draft saved:', draftInvoice);
+                      alert(`Invoice Draft Saved!\n\n` +
+                        `Draft ID: ${draftInvoice.draftId}\n` +
+                        `Patient ID: ${draftInvoice.patientId}\n` +
+                        `Saved: ${draftInvoice.savedDate}\n\n` +
+                        `Draft has been saved and can be completed later.`);
                     }}
                   >
                     Save as Draft

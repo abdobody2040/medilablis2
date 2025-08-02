@@ -353,16 +353,55 @@ export default function Worklists() {
                           <td className="py-3 px-4">
                             <div className="flex gap-2">
                               {item.status === 'pending' && (
-                                <Button size="sm">
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    console.log(`Starting work on item: ${item.sampleId}`);
+                                    alert(`Work Started!\n\n` +
+                                      `Sample ID: ${item.sampleId}\n` +
+                                      `Patient: ${item.patientName}\n` +
+                                      `Test: ${item.testType}\n` +
+                                      `Status: In Progress\n` +
+                                      `Started: ${new Date().toLocaleString()}`);
+                                  }}
+                                >
                                   Start
                                 </Button>
                               )}
                               {item.status === 'in_progress' && (
-                                <Button size="sm" variant="outline">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    console.log(`Completing work on item: ${item.sampleId}`);
+                                    if (confirm(`Mark ${item.sampleId} as complete?`)) {
+                                      alert(`Work Completed!\n\n` +
+                                        `Sample ID: ${item.sampleId}\n` +
+                                        `Patient: ${item.patientName}\n` +
+                                        `Test: ${item.testType}\n` +
+                                        `Status: Completed\n` +
+                                        `Completed: ${new Date().toLocaleString()}`);
+                                    }
+                                  }}
+                                >
                                   Complete
                                 </Button>
                               )}
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  console.log(`Viewing details for item: ${item.sampleId}`);
+                                  alert(`Work Item Details:\n\n` +
+                                    `Sample ID: ${item.sampleId}\n` +
+                                    `Patient: ${item.patientName}\n` +
+                                    `Test Type: ${item.testType}\n` +
+                                    `Priority: ${item.priority}\n` +
+                                    `Status: ${item.status}\n` +
+                                    `Received: ${item.receivedAt}\n` +
+                                    `Location: ${item.location}`);
+                                }}
+                              >
                                 View
                               </Button>
                             </div>

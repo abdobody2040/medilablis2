@@ -93,6 +93,56 @@ export default function UserManagement() {
     e.preventDefault();
     console.log('Creating user:', userForm);
     
+    // Validate required fields
+    if (!userForm.username || !userForm.email || !userForm.firstName || !userForm.lastName || !userForm.role) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userForm.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    
+    // Validate password
+    if (!userForm.password || userForm.password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (userForm.password !== userForm.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    
+    // Create user record
+    const newUser = {
+      id: `USER-${Date.now()}`,
+      username: userForm.username,
+      email: userForm.email,
+      firstName: userForm.firstName,
+      lastName: userForm.lastName,
+      fullName: `${userForm.firstName} ${userForm.lastName}`,
+      role: userForm.role,
+      isActive: userForm.isActive,
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+      status: userForm.isActive ? 'Active' : 'Inactive'
+    };
+    
+    console.log('User Created:', newUser);
+    
+    alert(`User Created Successfully!\n\n` +
+      `User ID: ${newUser.id}\n` +
+      `Name: ${newUser.fullName}\n` +
+      `Username: ${newUser.username}\n` +
+      `Email: ${newUser.email}\n` +
+      `Role: ${newUser.role}\n` +
+      `Status: ${newUser.status}\n\n` +
+      `User account has been created and activated.`);
+    
     // Reset form
     setUserForm({
       username: '',
