@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratory Information System - Professional LIS Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#0066CC',
+                            600: '#004499',
+                            700: '#1d4ed8',
+                        },
+                        success: {
+                            50: '#f0fdf4',
+                            500: '#00AA88',
+                            600: '#22c55e',
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            500: '#f59e0b',
+                        },
+                        error: {
+                            50: '#fef2f2',
+                            500: '#ef4444',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="h-full bg-slate-50 font-sans antialiased">
+    <!-- @COMPONENT: RootLayout -->
+    <div class="min-h-screen flex">
+        <!-- @COMPONENT: Sidebar -->
+        <aside class="w-64 bg-white shadow-sm border-r border-slate-200 flex flex-col">
+            <!-- @COMPONENT: Logo -->
+            <div class="p-6 border-b border-slate-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-slate-900">MedLab Pro</h1>
+                        <p class="text-xs text-slate-500">Laboratory Information System</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- @COMPONENT: Navigation -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-primary-50 text-primary-600 font-medium">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors">
+                            <i data-lucide="test-tube" class="w-5 h-5"></i>
+                            <span>Samples</span>
+                            <span class="ml-auto bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">24</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                            <span>Patients</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors">
+                            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                            <span>Results</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors">
+                            <i data-lucide="credit-card" class="w-5 h-5"></i>
+                            <span>Financial</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors">
+                            <i data-lucide="settings" class="w-5 h-5"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- @COMPONENT: UserProfile -->
+            <div class="p-4 border-t border-slate-200">
+                <div class="flex items-center space-x-3">
+                    <!-- Professional headshot of a medical professional in lab coat -->
+                    <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=64&h=64" alt="Dr. Sarah Johnson" class="w-10 h-10 rounded-full object-cover" />
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-slate-900" data-bind="user.name">Dr. Sarah Johnson</p>
+                        <p class="text-xs text-slate-500" data-bind="user.role">Lab Director</p>
+                    </div>
+                    <button class="p-1 hover:bg-slate-100 rounded" data-event="click:handleUserMenu">
+                        <i data-lucide="more-horizontal" class="w-4 h-4 text-slate-500"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- @COMPONENT: Header -->
+            <header class="bg-white border-b border-slate-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-slate-900">Laboratory Dashboard</h2>
+                        <p class="text-sm text-slate-600">Comprehensive laboratory management overview</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- @COMPONENT: SearchBar -->
+                        <div class="relative">
+                            <input type="text" placeholder="Search samples, patients..." class="w-80 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                            <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                        </div>
+                        
+                        <!-- @COMPONENT: NotificationBell -->
+                        <button class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                            <span class="absolute -top-1 -right-1 w-5 h-5 bg-error-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                        </button>
+
+                        <!-- @COMPONENT: AddSampleButton -->
+                        <button class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2" data-event="click:handleAddSample">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>New Sample</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Header -->
+
+            <!-- @COMPONENT: DashboardContent -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- @COMPONENT: StatsGrid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600">Total Samples</p>
+                                <p class="text-3xl font-bold text-slate-900" data-bind="stats.totalSamples">1,247</p>
+                                <p class="text-sm text-success-600 mt-1">
+                                    <i data-lucide="trending-up" class="w-4 h-4 inline mr-1"></i>
+                                    +12% from last month
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="test-tube" class="w-6 h-6 text-primary-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600">Pending Results</p>
+                                <p class="text-3xl font-bold text-slate-900" data-bind="stats.pendingResults">24</p>
+                                <p class="text-sm text-warning-600 mt-1">
+                                    <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
+                                    2 urgent
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="clock" class="w-6 h-6 text-warning-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600">Completed Today</p>
+                                <p class="text-3xl font-bold text-slate-900" data-bind="stats.completedToday">89</p>
+                                <p class="text-sm text-success-600 mt-1">
+                                    <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
+                                    On target
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="check-circle" class="w-6 h-6 text-success-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600">Revenue (MTD)</p>
+                                <p class="text-3xl font-bold text-slate-900" data-bind="stats.revenue">$47,830</p>
+                                <p class="text-sm text-success-600 mt-1">
+                                    <i data-lucide="dollar-sign" class="w-4 h-4 inline mr-1"></i>
+                                    +8% from target
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="dollar-sign" class="w-6 h-6 text-success-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: MainDashboardGrid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- @COMPONENT: RecentSamples -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200">
+                        <div class="p-6 border-b border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-slate-900">Recent Samples</h3>
+                                <button class="text-sm text-primary-600 hover:text-primary-700 font-medium">View All</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Sample ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Patient</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Test Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Priority</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    <!-- @MAP: recentSamples.map(sample => ( -->
+                                    <tr class="hover:bg-slate-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-mono text-slate-900" data-bind="sample.id">LAB-2024-0891</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <!-- Professional portrait of a patient -->
+                                                <img src="https://pixabay.com/get/g37649727a0a2a822bb2c6ee2c8b594f46177b430810da458b0fb03e0d3c3a160c58fd21d493727e5ae1585ca22eaeef17c6aa4d3e0a69b32486e5c0c2b8b7cfc_1280.jpg" alt="Patient profile" class="w-8 h-8 rounded-full object-cover mr-3" />
+                                                <div>
+                                                    <div class="text-sm font-medium text-slate-900" data-bind="sample.patient.name">Emily Rodriguez</div>
+                                                    <div class="text-sm text-slate-500" data-bind="sample.patient.age">32 years old</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-slate-900" data-bind="sample.testType">Complete Blood Count</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
+                                                In Progress
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800">
+                                                Urgent
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <div class="flex items-center space-x-2">
+                                                <button class="text-slate-400 hover:text-slate-600" data-event="click:handleViewSample">
+                                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="text-slate-400 hover:text-slate-600" data-event="click:handleEditSample">
+                                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-slate-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-mono text-slate-900" data-bind="sample.id">LAB-2024-0890</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <!-- Professional portrait of an elderly patient -->
+                                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Patient profile" class="w-8 h-8 rounded-full object-cover mr-3" />
+                                                <div>
+                                                    <div class="text-sm font-medium text-slate-900" data-bind="sample.patient.name">Michael Chen</div>
+                                                    <div class="text-sm text-slate-500" data-bind="sample.patient.age">67 years old</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-slate-900" data-bind="sample.testType">Lipid Panel</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                                                Completed
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                                Routine
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <div class="flex items-center space-x-2">
+                                                <button class="text-slate-400 hover:text-slate-600" data-event="click:handleViewResults">
+                                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="text-slate-400 hover:text-slate-600" data-event="click:handleDownloadPDF">
+                                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-slate-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-mono text-slate-900" data-bind="sample.id">LAB-2024-0889</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <!-- Professional portrait of a young adult patient -->
+                                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Patient profile" class="w-8 h-8 rounded-full object-cover mr-3" />
+                                                <div>
+                                                    <div class="text-sm font-medium text-slate-900" data-bind="sample.patient.name">Jessica Taylor</div>
+                                                    <div class="text-sm text-slate-500" data-bind="sample.patient.age">28 years old</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-slate-900" data-bind="sample.testType">Thyroid Function</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                                Received
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                                Routine
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <div class="flex items-center space-x-2">
+                                                <button class="text-slate-400 hover:text-slate-600" data-event="click:handleProcessSample">
+                                                    <i data-lucide="play" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="text-slate-400 hover:text-slate-600" data-event="click:handleEditSample">
+                                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- @COMPONENT: QuickActions -->
+                    <div class="space-y-6">
+                        <!-- @COMPONENT: QuickActionsCard -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button class="w-full flex items-center justify-between p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors group" data-event="click:handleNewPatient">
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="user-plus" class="w-5 h-5 text-primary-600"></i>
+                                        <span class="font-medium text-primary-700">Add New Patient</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 text-primary-600 group-hover:translate-x-1 transition-transform"></i>
+                                </button>
+
+                                <button class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group" data-event="click:handleBulkImport">
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="upload" class="w-5 h-5 text-slate-600"></i>
+                                        <span class="font-medium text-slate-700">Import Samples</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform"></i>
+                                </button>
+
+                                <button class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group" data-event="click:handleGenerateReport">
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="file-bar-chart" class="w-5 h-5 text-slate-600"></i>
+                                        <span class="font-medium text-slate-700">Generate Report</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform"></i>
+                                </button>
+
+                                <button class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group" data-event="click:handleQualityControl">
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="shield-check" class="w-5 h-5 text-slate-600"></i>
+                                        <span class="font-medium text-slate-700">Quality Control</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- @COMPONENT: AlertsCard -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4">System Alerts</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center space-x-3 p-3 bg-error-50 rounded-lg border border-error-200">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-error-600 flex-shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-error-900">Critical Sample Delay</p>
+                                        <p class="text-xs text-error-700">Sample LAB-2024-0887 is 4 hours overdue</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-3 p-3 bg-warning-50 rounded-lg border border-warning-200">
+                                    <i data-lucide="clock" class="w-5 h-5 text-warning-600 flex-shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-warning-900">Equipment Maintenance</p>
+                                        <p class="text-xs text-warning-700">Analyzer #3 due for calibration</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-3 p-3 bg-primary-50 rounded-lg border border-primary-200">
+                                    <i data-lucide="info" class="w-5 h-5 text-primary-600 flex-shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-primary-900">System Update</p>
+                                        <p class="text-xs text-primary-700">LIS v2.1.3 available for installation</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- @COMPONENT: PerformanceMetrics -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4">Performance Metrics</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-slate-700">Turnaround Time</span>
+                                        <span class="text-sm text-slate-900">2.3 hrs avg</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 rounded-full h-2">
+                                        <div class="bg-success-500 h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-slate-700">Accuracy Rate</span>
+                                        <span class="text-sm text-slate-900">98.7%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 rounded-full h-2">
+                                        <div class="bg-success-500 h-2 rounded-full" style="width: 98.7%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-slate-700">Equipment Uptime</span>
+                                        <span class="text-sm text-slate-900">99.2%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 rounded-full h-2">
+                                        <div class="bg-success-500 h-2 rounded-full" style="width: 99.2%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardContent -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: RootLayout -->
+
+    <!-- @COMPONENT: Modal for New Sample Form -->
+    <div id="sampleModal" class="fixed inset-0 z-50 hidden overflow-y-auto" data-modal="addSample">
+        <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-500 bg-opacity-75" data-event="click:closeModal"></div>
+            
+            <div class="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-xl">
+                <!-- @COMPONENT: NewSampleForm -->
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-slate-900">Add New Sample</h3>
+                    <button class="text-slate-400 hover:text-slate-600" data-event="click:closeModal">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <form class="space-y-6" data-implementation="React Hook Form with Zod validation">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="patientName" class="block text-sm font-medium text-slate-700 mb-2">Patient Name</label>
+                            <input type="text" id="patientName" name="patientName" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Enter patient name" />
+                        </div>
+                        
+                        <div>
+                            <label for="patientId" class="block text-sm font-medium text-slate-700 mb-2">Patient ID</label>
+                            <input type="text" id="patientId" name="patientId" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Enter patient ID" />
+                        </div>
+
+                        <div>
+                            <label for="testType" class="block text-sm font-medium text-slate-700 mb-2">Test Type</label>
+                            <select id="testType" name="testType" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="">Select test type</option>
+                                <option value="cbc">Complete Blood Count</option>
+                                <option value="lipid">Lipid Panel</option>
+                                <option value="thyroid">Thyroid Function</option>
+                                <option value="liver">Liver Function</option>
+                                <option value="kidney">Kidney Function</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="priority" class="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+                            <select id="priority" name="priority" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="routine">Routine</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="stat">STAT</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="collectionDate" class="block text-sm font-medium text-slate-700 mb-2">Collection Date</label>
+                            <input type="datetime-local" id="collectionDate" name="collectionDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                        </div>
+
+                        <div>
+                            <label for="physician" class="block text-sm font-medium text-slate-700 mb-2">Ordering Physician</label>
+                            <input type="text" id="physician" name="physician" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Enter physician name" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-slate-700 mb-2">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Additional notes or instructions"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-4 pt-6 border-t border-slate-200">
+                        <button type="button" class="px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" data-event="click:closeModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors" data-event="submit:handleCreateSample">
+                            Create Sample
+                        </button>
+                    </div>
+                </form>
+                <!-- @END_COMPONENT: NewSampleForm -->
+            </div>
+        </div>
+    </div>
+
+    <!-- @COMPONENT: Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2" data-implementation="Toast notification system">
+        <!-- Toast notifications will be dynamically inserted here -->
+    </div>
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        // Initialize Lucide icons
+        (function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        })();
+
+        // Basic interactivity for demonstration purposes only
+        (function() {
+            // Modal functionality
+            const addSampleBtn = document.querySelector('[data-event="click:handleAddSample"]');
+            const modal = document.getElementById('sampleModal');
+            const closeModalBtns = document.querySelectorAll('[data-event="click:closeModal"]');
+
+            if (addSampleBtn && modal) {
+                addSampleBtn.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                });
+            }
+
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                });
+            });
+
+            // Close modal on backdrop click
+            modal?.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+
+            // Form submission placeholder
+            const sampleForm = modal?.querySelector('form');
+            sampleForm?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('Sample form submitted - implement with React Hook Form + Zod validation');
+                modal.classList.add('hidden');
+                
+                // Show success toast (placeholder)
+                showToast('Sample created successfully!', 'success');
+            });
+
+            // Toast notification system
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = `flex items-center p-4 rounded-lg shadow-lg transition-all transform translate-x-full ${getToastClasses(type)}`;
+                
+                toast.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="${getToastIcon(type)}" class="w-5 h-5"></i>
+                        <span class="font-medium">${message}</span>
+                    </div>
+                    <button class="ml-4 text-current opacity-70 hover:opacity-100" onclick="this.parentElement.remove()">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                `;
+
+                container.appendChild(toast);
+                
+                // Initialize icons for new toast
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+            }
+
+            function getToastClasses(type) {
+                const classes = {
+                    success: 'bg-success-50 text-success-800 border border-success-200',
+                    error: 'bg-error-50 text-error-800 border border-error-200',
+                    warning: 'bg-warning-50 text-warning-800 border border-warning-200',
+                    info: 'bg-primary-50 text-primary-800 border border-primary-200'
+                };
+                return classes[type] || classes.info;
+            }
+
+            function getToastIcon(type) {
+                const icons = {
+                    success: 'check-circle',
+                    error: 'alert-circle',
+                    warning: 'alert-triangle',
+                    info: 'info'
+                };
+                return icons[type] || icons.info;
+            }
+
+            // Make showToast globally available for demonstration
+            window.showToast = showToast;
+        })();
+    </script>
+</body>
+</html>

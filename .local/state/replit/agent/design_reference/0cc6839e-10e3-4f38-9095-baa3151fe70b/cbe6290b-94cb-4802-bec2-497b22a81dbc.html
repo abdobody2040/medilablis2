@@ -1,0 +1,657 @@
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModernLIS - Laboratory Information System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe', 
+                            500: '#0066cc',
+                            600: '#0052a3',
+                            700: '#003d7a',
+                            900: '#1e293b'
+                        },
+                        medical: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                            700: '#3730a3'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="h-full bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+    <!-- @COMPONENT: AppShell [Main application layout with sidebar and header] -->
+    <div class="flex h-full">
+        <!-- Sidebar Navigation -->
+        <!-- @COMPONENT: Sidebar [Navigation with role-based menu items] -->
+        <div class="hidden md:flex md:w-64 md:flex-col">
+            <div class="flex min-h-0 flex-1 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+                <!-- Logo and Brand -->
+                <div class="flex flex-1 flex-col pt-5 pb-4 overflow-y-auto">
+                    <div class="flex items-center flex-shrink-0 px-4 mb-8">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-primary-500 p-2 rounded-lg">
+                                <i class="fas fa-microscope text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-bold text-slate-900 dark:text-white">ModernLIS</h1>
+                                <p class="text-sm text-slate-500 dark:text-slate-400">v2025.1.0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Menu -->
+                    <!-- @FUNCTIONALITY: Navigation should implement active state management and role-based visibility -->
+                    <nav class="flex-1 px-4 space-y-2">
+                        <div class="space-y-1">
+                            <!-- Dashboard -->
+                            <a href="#" class="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/dashboard">
+                                <i class="fas fa-chart-line mr-3 text-primary-500"></i>
+                                Dashboard
+                            </a>
+                            
+                            <!-- Samples -->
+                            <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/samples">
+                                <i class="fas fa-vial mr-3 text-slate-400"></i>
+                                Sample Management
+                                <span class="ml-auto bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs font-medium px-2 py-1 rounded-full" data-bind="pendingSamples.count">12</span>
+                            </a>
+                            
+                            <!-- Patients -->
+                            <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/patients">
+                                <i class="fas fa-user-injured mr-3 text-slate-400"></i>
+                                Patient Records
+                            </a>
+                            
+                            <!-- Results -->
+                            <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/results">
+                                <i class="fas fa-clipboard-list mr-3 text-slate-400"></i>
+                                Test Results
+                                <span class="ml-auto bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs font-medium px-2 py-1 rounded-full" data-bind="pendingResults.count">8</span>
+                            </a>
+                            
+                            <!-- Financial -->
+                            <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/financial">
+                                <i class="fas fa-dollar-sign mr-3 text-slate-400"></i>
+                                Financial
+                            </a>
+                            
+                            <!-- Reports -->
+                            <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/reports">
+                                <i class="fas fa-file-medical-alt mr-3 text-slate-400"></i>
+                                Reports
+                            </a>
+                        </div>
+
+                        <!-- Settings Section -->
+                        <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
+                            <h3 class="px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                System
+                            </h3>
+                            <div class="space-y-1">
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/users">
+                                    <i class="fas fa-users mr-3 text-slate-400"></i>
+                                    User Management
+                                </a>
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group flex items-center px-3 py-2 text-sm font-medium rounded-lg" data-route="/settings">
+                                    <i class="fas fa-cog mr-3 text-slate-400"></i>
+                                    Settings
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+
+                <!-- User Profile -->
+                <!-- @COMPONENT: UserProfile [User info with role and logout] -->
+                <div class="flex-shrink-0 border-t border-slate-200 dark:border-slate-700 p-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <!-- Professional avatar placeholder -->
+                            <div class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-900 dark:text-white" data-bind="user.name">Dr. Sarah Johnson</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400" data-bind="user.role">Lab Director</p>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" data-event="click:handleLogout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- Main Content Area -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+            <!-- Top Header -->
+            <!-- @COMPONENT: Header [Top navigation with search, notifications, and dark mode toggle] -->
+            <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <!-- Mobile menu button -->
+                    <button class="md:hidden text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <!-- Page Title and Breadcrumb -->
+                    <div class="flex items-center space-x-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Laboratory Dashboard</h1>
+                            <nav class="flex text-sm text-slate-500 dark:text-slate-400" aria-label="Breadcrumb">
+                                <span>Dashboard</span>
+                                <span class="mx-2">/</span>
+                                <span class="text-slate-700 dark:text-slate-300">Overview</span>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Header Actions -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Search -->
+                        <div class="relative hidden md:block">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-slate-400"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                placeholder="Search samples, patients..."
+                                class="block w-80 pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                data-implementation="Should implement fuzzy search across samples, patients, and results"
+                            />
+                        </div>
+
+                        <!-- Notifications -->
+                        <button class="relative p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </button>
+
+                        <!-- Dark Mode Toggle -->
+                        <!-- @FUNCTIONALITY: Should toggle between light and dark themes -->
+                        <button id="darkModeToggle" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                            <i class="fas fa-moon dark:hidden"></i>
+                            <i class="fas fa-sun hidden dark:inline"></i>
+                        </button>
+
+                        <!-- Quick Actions -->
+                        <button class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2" data-event="click:openNewSampleModal">
+                            <i class="fas fa-plus"></i>
+                            <span>New Sample</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Header -->
+
+            <!-- Main Dashboard Content -->
+            <!-- @COMPONENT: DashboardContent [Main dashboard with analytics and quick actions] -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Status Overview Cards -->
+                <!-- @COMPONENT: MetricsCards [Key laboratory metrics and KPIs] -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Pending Samples Card -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Pending Samples</p>
+                                <p class="text-3xl font-bold text-slate-900 dark:text-white" data-bind="metrics.pendingSamples">247</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-red-600 dark:text-red-400 text-sm font-medium">+12% from yesterday</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                <i class="fas fa-vial text-red-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completed Tests Card -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Completed Today</p>
+                                <p class="text-3xl font-bold text-slate-900 dark:text-white" data-bind="metrics.completedToday">89</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-green-600 dark:text-green-400 text-sm font-medium">+5% from yesterday</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Today Card -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Revenue Today</p>
+                                <p class="text-3xl font-bold text-slate-900 dark:text-white" data-bind="metrics.revenueToday">$24,680</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-green-600 dark:text-green-400 text-sm font-medium">+8% from yesterday</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <i class="fas fa-dollar-sign text-blue-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Alerts Card -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Critical Alerts</p>
+                                <p class="text-3xl font-bold text-slate-900 dark:text-white" data-bind="metrics.criticalAlerts">3</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-amber-600 dark:text-amber-400 text-sm font-medium">Requires attention</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                                <i class="fas fa-exclamation-triangle text-amber-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: MetricsCards -->
+
+                <!-- Main Dashboard Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column - Charts and Analytics -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Sample Volume Chart -->
+                        <!-- @COMPONENT: SampleVolumeChart [Daily sample processing trends] -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Sample Processing Trends</h3>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg">7D</button>
+                                    <button class="px-3 py-1 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">30D</button>
+                                    <button class="px-3 py-1 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">90D</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Chart Placeholder - In production, use Recharts -->
+                            <!-- @FUNCTIONALITY: Should implement interactive chart using Recharts library -->
+                            <div class="h-80 flex items-center justify-center bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-area text-4xl text-slate-400 mb-4"></i>
+                                    <p class="text-slate-600 dark:text-slate-400">Sample Volume Chart</p>
+                                    <p class="text-sm text-slate-500 dark:text-slate-500">Recharts integration required</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_COMPONENT: SampleVolumeChart -->
+
+                        <!-- Recent Test Results Table -->
+                        <!-- @COMPONENT: RecentResultsTable [Latest test results with status] -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Recent Test Results</h3>
+                                <button class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium">
+                                    View All
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <!-- @FUNCTIONALITY: Should implement sortable table with TanStack Table -->
+                                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sample ID</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Patient</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Test Type</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Received</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700" data-mock="true">
+                                        <!-- @MAP: recentResults.map(result => ( -->
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                            <td class="px-4 py-4 text-sm font-medium text-slate-900 dark:text-white" data-bind="result.sampleId">LAB-2025-001</td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.patientName">Maria Rodriguez</td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.testType">Complete Blood Count</td>
+                                            <td class="px-4 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300" data-bind="result.status">Completed</span>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300" data-bind="result.priority">STAT</span>
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.receivedAt">2 hours ago</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                            <td class="px-4 py-4 text-sm font-medium text-slate-900 dark:text-white" data-bind="result.sampleId">LAB-2025-002</td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.patientName">John Smith</td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.testType">Lipid Panel</td>
+                                            <td class="px-4 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300" data-bind="result.status">In Progress</span>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300" data-bind="result.priority">Normal</span>
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.receivedAt">4 hours ago</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                            <td class="px-4 py-4 text-sm font-medium text-slate-900 dark:text-white" data-bind="result.sampleId">LAB-2025-003</td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.patientName">Emily Chen</td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.testType">Thyroid Function</td>
+                                            <td class="px-4 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-300" data-bind="result.status">Pending</span>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300" data-bind="result.priority">Normal</span>
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300" data-bind="result.receivedAt">6 hours ago</td>
+                                        </tr>
+                                        <!-- @END_MAP )) -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- @END_COMPONENT: RecentResultsTable -->
+                    </div>
+
+                    <!-- Right Column - Quick Actions and Alerts -->
+                    <div class="space-y-6">
+                        <!-- Quick Actions Panel -->
+                        <!-- @COMPONENT: QuickActions [Common laboratory actions] -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button class="w-full flex items-center space-x-3 p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg" data-event="click:openNewSampleForm">
+                                    <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                                        <i class="fas fa-plus text-primary-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-slate-900 dark:text-white">Register New Sample</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">Add a new sample to the system</p>
+                                    </div>
+                                </button>
+                                
+                                <button class="w-full flex items-center space-x-3 p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg" data-event="click:openResultEntry">
+                                    <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                        <i class="fas fa-edit text-green-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-slate-900 dark:text-white">Enter Results</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">Input test results</p>
+                                    </div>
+                                </button>
+                                
+                                <button class="w-full flex items-center space-x-3 p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg" data-event="click:generateReport">
+                                    <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                        <i class="fas fa-file-pdf text-blue-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-slate-900 dark:text-white">Generate Report</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">Create PDF reports</p>
+                                    </div>
+                                </button>
+
+                                <button class="w-full flex items-center space-x-3 p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg" data-event="click:manageUsers">
+                                    <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                        <i class="fas fa-users text-purple-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-slate-900 dark:text-white">Manage Users</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">User administration</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- @END_COMPONENT: QuickActions -->
+
+                        <!-- Critical Alerts -->
+                        <!-- @COMPONENT: CriticalAlerts [Important system notifications] -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Critical Alerts</h3>
+                                <span class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs font-medium px-2 py-1 rounded-full" data-bind="alerts.count">3</span>
+                            </div>
+                            
+                            <div class="space-y-4" data-mock="true">
+                                <!-- @MAP: criticalAlerts.map(alert => ( -->
+                                <div class="flex items-start space-x-3 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-red-900 dark:text-red-200" data-bind="alert.title">Equipment Maintenance Due</p>
+                                        <p class="text-sm text-red-700 dark:text-red-300" data-bind="alert.message">Hematology analyzer requires calibration</p>
+                                        <p class="text-xs text-red-600 dark:text-red-400 mt-1" data-bind="alert.time">2 hours ago</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-clock text-amber-500"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-amber-900 dark:text-amber-200" data-bind="alert.title">Sample Turnaround Time</p>
+                                        <p class="text-sm text-amber-700 dark:text-amber-300" data-bind="alert.message">5 STAT samples pending >2 hours</p>
+                                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1" data-bind="alert.time">30 minutes ago</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle text-blue-500"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-blue-900 dark:text-blue-200" data-bind="alert.title">System Update Available</p>
+                                        <p class="text-sm text-blue-700 dark:text-blue-300" data-bind="alert.message">ModernLIS v2025.1.1 is ready</p>
+                                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1" data-bind="alert.time">1 day ago</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                        <!-- @END_COMPONENT: CriticalAlerts -->
+
+                        <!-- System Status -->
+                        <!-- @COMPONENT: SystemStatus [Infrastructure health monitoring] -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">System Status</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full" data-bind="status.database.indicator"></div>
+                                        <span class="text-sm text-slate-600 dark:text-slate-300">Database</span>
+                                    </div>
+                                    <span class="text-sm font-medium text-green-600 dark:text-green-400" data-bind="status.database.status">Operational</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full" data-bind="status.api.indicator"></div>
+                                        <span class="text-sm text-slate-600 dark:text-slate-300">API Services</span>
+                                    </div>
+                                    <span class="text-sm font-medium text-green-600 dark:text-green-400" data-bind="status.api.status">Operational</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-amber-500 rounded-full" data-bind="status.instruments.indicator"></div>
+                                        <span class="text-sm text-slate-600 dark:text-slate-300">Lab Instruments</span>
+                                    </div>
+                                    <span class="text-sm font-medium text-amber-600 dark:text-amber-400" data-bind="status.instruments.status">1 Warning</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full" data-bind="status.backup.indicator"></div>
+                                        <span class="text-sm text-slate-600 dark:text-slate-300">Backup System</span>
+                                    </div>
+                                    <span class="text-sm font-medium text-green-600 dark:text-green-400" data-bind="status.backup.status">Operational</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_COMPONENT: SystemStatus -->
+                    </div>
+                </div>
+            </main>
+            <!-- @END_COMPONENT: DashboardContent -->
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AppShell -->
+
+    <!-- Modal Overlay for New Sample Form -->
+    <!-- @COMPONENT: NewSampleModal [Form for registering new samples] -->
+    <!-- @STATE: isNewSampleModalOpen:boolean = false -->
+    <div id="newSampleModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-50" data-implementation="Should implement modal with React Portal">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Register New Sample</h2>
+                    <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" data-event="click:closeNewSampleModal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- @FUNCTIONALITY: Should implement React Hook Form with Zod validation -->
+                <form class="space-y-6" data-implementation="Use React Hook Form with Zod validation">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Patient Name</label>
+                            <input type="text" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Enter patient name" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Sample ID</label>
+                            <input type="text" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Auto-generated" readonly />
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Test Type</label>
+                            <select class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                                <option value="">Select test type</option>
+                                <option value="cbc">Complete Blood Count</option>
+                                <option value="lipid">Lipid Panel</option>
+                                <option value="thyroid">Thyroid Function</option>
+                                <option value="glucose">Glucose Test</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Priority</label>
+                            <select class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                                <option value="normal">Normal</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="stat">STAT</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Special Instructions</label>
+                        <textarea class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" rows="3" placeholder="Any special handling instructions..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" class="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200" data-event="click:closeNewSampleModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium" data-event="submit:handleNewSampleSubmit">
+                            Register Sample
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: NewSampleModal -->
+
+    <!-- JavaScript for Basic Interactions -->
+    <script>
+        // TODO: Implement proper React state management with Zustand
+        // TODO: Implement API calls with TanStack Query
+        // TODO: Implement form validation with React Hook Form + Zod
+        
+        (() => {
+            // Dark mode toggle functionality
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const html = document.documentElement;
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                html.classList.add('dark');
+            }
+            
+            darkModeToggle?.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+            });
+
+            // Modal functionality
+            const newSampleModal = document.getElementById('newSampleModal');
+            
+            // Open modal
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-event*="openNewSample"]')) {
+                    newSampleModal?.classList.remove('hidden');
+                }
+                
+                if (e.target.closest('[data-event*="closeNewSampleModal"]')) {
+                    newSampleModal?.classList.add('hidden');
+                }
+            });
+
+            // Close modal on backdrop click
+            newSampleModal?.addEventListener('click', (e) => {
+                if (e.target === newSampleModal) {
+                    newSampleModal.classList.add('hidden');
+                }
+            });
+
+            // Navigation active state (mock implementation)
+            document.addEventListener('click', (e) => {
+                const navLink = e.target.closest('[data-route]');
+                if (navLink) {
+                    // Remove active class from all nav links
+                    document.querySelectorAll('[data-route]').forEach(link => {
+                        link.className = link.className.replace(/bg-primary-\d+[^\s]*\s*/g, '').replace(/text-primary-\d+[^\s]*\s*/g, '');
+                        link.className += ' text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700';
+                    });
+                    
+                    // Add active class to clicked link
+                    navLink.className = navLink.className.replace(/text-slate-\d+[^\s]*\s*/g, '').replace(/hover:bg-slate-\d+[^\s]*\s*/g, '');
+                    navLink.className += ' bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300';
+                }
+            });
+
+            // PWA and offline functionality placeholders
+            // TODO: Implement Service Worker registration
+            // TODO: Implement IndexedDB for offline storage
+            // TODO: Implement background sync for data synchronization
+            
+            console.log('ModernLIS v2025.1.0 - Laboratory Information System');
+            console.log('Built with Next.js 15.1.0, React 19.0.0, TypeScript 5.7.0');
+            console.log('Ready for production deployment on Replit');
+        })();
+    </script>
+</body>
+</html>
