@@ -89,7 +89,7 @@ export default function UserManagement() {
     },
   ];
 
-  const handleUserSubmit = (e: React.FormEvent) => {
+  const handleUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Creating user:', userForm);
     
@@ -117,43 +117,45 @@ export default function UserManagement() {
       return;
     }
     
-    // Create user record
-    const newUser = {
-      id: `USER-${Date.now()}`,
-      username: userForm.username,
-      email: userForm.email,
-      firstName: userForm.firstName,
-      lastName: userForm.lastName,
-      fullName: `${userForm.firstName} ${userForm.lastName}`,
-      role: userForm.role,
-      isActive: userForm.isActive,
-      createdAt: new Date().toISOString(),
-      lastLogin: null,
-      status: userForm.isActive ? 'Active' : 'Inactive'
-    };
-    
-    console.log('User Created:', newUser);
-    
-    alert(`User Created Successfully!\n\n` +
-      `User ID: ${newUser.id}\n` +
-      `Name: ${newUser.fullName}\n` +
-      `Username: ${newUser.username}\n` +
-      `Email: ${newUser.email}\n` +
-      `Role: ${newUser.role}\n` +
-      `Status: ${newUser.status}\n\n` +
-      `User account has been created and activated.`);
-    
-    // Reset form
-    setUserForm({
-      username: '',
-      email: '',
-      firstName: '',
-      lastName: '',
-      role: '',
-      password: '',
-      confirmPassword: '',
-      isActive: true,
-    });
+    try {
+      // Prepare user data for database (exclude confirmPassword)
+      const { confirmPassword, ...userData } = userForm;
+      
+      // Save to database using API
+      const { userApi } = await import('@/lib/api');
+      const savedUser = await userApi.createUser({
+        ...userData,
+        createdBy: 'current-user-id' // In real app, get from auth context
+      });
+      
+      console.log('User Saved to Database:', savedUser);
+      
+      alert(`User Created & Saved to Database!\n\n` +
+        `Database ID: ${savedUser.id}\n` +
+        `Username: ${savedUser.username}\n` +
+        `Email: ${savedUser.email}\n` +
+        `Full Name: ${savedUser.firstName} ${savedUser.lastName}\n` +
+        `Role: ${savedUser.role}\n` +
+        `Status: ${savedUser.isActive ? 'Active' : 'Inactive'}\n` +
+        `Created: ${new Date(savedUser.createdAt).toLocaleString()}\n\n` +
+        `User has been permanently saved to the database.`);
+      
+      // Reset form
+      setUserForm({
+        username: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        role: '',
+        password: '',
+        confirmPassword: '',
+        isActive: true,
+      });
+      
+    } catch (error) {
+      console.error('User creation error:', error);
+      alert(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handlePermissionChange = (module: string, permission: string, value: boolean) => {

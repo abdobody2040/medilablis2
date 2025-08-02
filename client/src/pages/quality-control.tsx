@@ -62,7 +62,7 @@ export default function QualityControl() {
     },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('QC Entry:', qcForm);
     
@@ -72,64 +72,74 @@ export default function QualityControl() {
       return;
     }
     
-    // Calculate pass/fail status based on tolerance
-    const expectedVal = parseFloat(qcForm.expectedValue);
-    const actualVal = parseFloat(qcForm.actualValue);
-    const toleranceVal = parseFloat(qcForm.tolerance);
-    
-    let qcStatus = 'PASS';
-    let statusMessage = '';
-    
-    if (expectedVal && actualVal && toleranceVal) {
-      const difference = Math.abs(expectedVal - actualVal);
-      const toleranceRange = (expectedVal * toleranceVal) / 100;
+    try {
+      // Calculate pass/fail status based on tolerance
+      const expectedVal = parseFloat(qcForm.expectedValue);
+      const actualVal = parseFloat(qcForm.actualValue);
+      const toleranceVal = parseFloat(qcForm.tolerance);
       
-      if (difference > toleranceRange) {
-        qcStatus = 'FAIL';
-        statusMessage = `Out of tolerance range. Difference: ${difference.toFixed(2)}, Allowed: ${toleranceRange.toFixed(2)}`;
-      } else {
-        statusMessage = `Within tolerance range. Difference: ${difference.toFixed(2)}, Allowed: ${toleranceRange.toFixed(2)}`;
+      let passed = true;
+      let statusMessage = '';
+      
+      if (expectedVal && actualVal && toleranceVal) {
+        const difference = Math.abs(expectedVal - actualVal);
+        const toleranceRange = (expectedVal * toleranceVal) / 100;
+        
+        if (difference > toleranceRange) {
+          passed = false;
+          statusMessage = `Out of tolerance range. Difference: ${difference.toFixed(2)}, Allowed: ${toleranceRange.toFixed(2)}`;
+        } else {
+          statusMessage = `Within tolerance range. Difference: ${difference.toFixed(2)}, Allowed: ${toleranceRange.toFixed(2)}`;
+        }
       }
+      
+      // Get first test type for demo (in real app, would select proper test type)
+      const testTypes = await fetch('/api/test-types').then(res => res.json()).catch(() => []);
+      const testTypeId = testTypes[0]?.id || 'demo-test-type-id';
+      
+      // Create QC entry data
+      const qcData = {
+        testTypeId,
+        qcLevel: qcForm.qcLevel,
+        lotNumber: qcForm.lotNumber,
+        expectedValue: expectedVal || 0,
+        tolerance: toleranceVal || 0,
+        actualValue: actualVal,
+        passed,
+        runBy: 'current-user-id', // In real app, get from auth context
+        comments: `${qcForm.comments} - ${statusMessage}`.trim()
+      };
+      
+      // Save to database using API
+      const { qualityControlApi } = await import('@/lib/api');
+      const savedQc = await qualityControlApi.submit(qcData);
+      
+      console.log('QC Entry Saved to Database:', savedQc);
+      
+      // Show success message with database ID
+      alert(`Quality Control Entry Saved!\n\n` +
+        `Database ID: ${savedQc.id}\n` +
+        `Test Type: ${qcForm.testType}\n` +
+        `QC Level: ${qcForm.qcLevel}\n` +
+        `Result: ${passed ? 'PASS' : 'FAIL'}\n` +
+        `${statusMessage}\n\n` +
+        `Entry has been permanently saved to the database.`);
+      
+      // Reset form
+      setQcForm({
+        testType: '',
+        qcLevel: '',
+        lotNumber: '',
+        expectedValue: '',
+        actualValue: '',
+        tolerance: '',
+        comments: '',
+      });
+      
+    } catch (error) {
+      console.error('QC submission error:', error);
+      alert(`Failed to save QC entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    // Create QC entry record
-    const qcEntry = {
-      id: `QC-${Date.now()}`,
-      testType: qcForm.testType,
-      qcLevel: qcForm.qcLevel,
-      lotNumber: qcForm.lotNumber,
-      expectedValue: expectedVal || 'N/A',
-      actualValue: actualVal,
-      tolerance: toleranceVal || 'N/A',
-      status: qcStatus,
-      statusMessage,
-      comments: qcForm.comments,
-      timestamp: new Date().toLocaleString(),
-      technician: 'Current User'
-    };
-    
-    // Simulate saving to database
-    console.log('QC Entry Saved:', qcEntry);
-    
-    // Show detailed result
-    alert(`Quality Control Entry Submitted!\n\n` +
-      `Entry ID: ${qcEntry.id}\n` +
-      `Test Type: ${qcEntry.testType}\n` +
-      `QC Level: ${qcEntry.qcLevel}\n` +
-      `Result: ${qcStatus}\n` +
-      `${statusMessage}\n\n` +
-      `Entry has been logged and saved to the QC database.`);
-    
-    // Reset form
-    setQcForm({
-      testType: '',
-      qcLevel: '',
-      lotNumber: '',
-      expectedValue: '',
-      actualValue: '',
-      tolerance: '',
-      comments: '',
-    });
   };
 
   const getQcStatusBadge = (passed: boolean) => {

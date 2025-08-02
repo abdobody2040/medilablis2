@@ -76,7 +76,7 @@ export default function Financial() {
     },
   ];
 
-  const handleInvoiceSubmit = (e: React.FormEvent) => {
+  const handleInvoiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Creating invoice:', invoiceForm);
     
@@ -93,64 +93,115 @@ export default function Financial() {
       return;
     }
     
-    // Generate invoice
-    const invoice = {
-      id: `INV-${Date.now()}`,
-      invoiceNumber: `INV-2024-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-      patientId: invoiceForm.patientId,
-      description: invoiceForm.description,
-      amount: amount,
-      paymentMethod: invoiceForm.paymentMethod,
-      dueDate: invoiceForm.dueDate,
-      invoiceDate: new Date().toLocaleDateString(),
-      paymentStatus: 'pending'
-    };
-    
-    // Create invoice content for download
-    const invoiceContent = `
+    try {
+      // Find or create patient first (simplified for demo)
+      let patientId = invoiceForm.patientId;
+      
+      // Try to find existing patient
+      const existingPatient = await fetch(`/api/patients/search?q=${patientId}`)
+        .then(res => res.json())
+        .catch(() => []);
+      
+      if (existingPatient.length === 0) {
+        // Create demo patient if not found
+        const newPatient = await fetch('/api/patients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patientId: invoiceForm.patientId,
+            firstName: 'Demo',
+            lastName: 'Patient',
+            dateOfBirth: new Date('1990-01-01'),
+            gender: 'unknown',
+            phoneNumber: '555-0000',
+            email: `${invoiceForm.patientId}@demo.com`,
+            address: 'Demo Address'
+          })
+        }).then(res => res.json()).catch(() => null);
+        
+        if (newPatient) {
+          patientId = newPatient.id;
+        }
+      } else {
+        patientId = existingPatient[0].id;
+      }
+      
+      // Generate invoice number
+      const invoiceNumber = `INV-2024-${String(Date.now()).slice(-6)}`;
+      
+      // Create invoice data for database
+      const invoiceData = {
+        patientId,
+        transactionType: 'invoice',
+        amount: amount.toString(),
+        currency: 'USD',
+        paymentMethod: invoiceForm.paymentMethod || 'cash',
+        paymentStatus: 'pending',
+        invoiceNumber,
+        description: invoiceForm.description,
+        processedBy: 'current-user-id', // In real app, get from auth context
+        dueDate: invoiceForm.dueDate ? new Date(invoiceForm.dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      };
+      
+      // Save to database using API
+      const { financialApi } = await import('@/lib/api');
+      const savedInvoice = await financialApi.createInvoice(invoiceData);
+      
+      console.log('Invoice Saved to Database:', savedInvoice);
+      
+      // Create invoice content for download
+      const invoiceContent = `
 LABORATORY INVOICE
 ==================
 
-Invoice #: ${invoice.invoiceNumber}
-Date: ${invoice.invoiceDate}
-Due Date: ${invoice.dueDate}
+Invoice #: ${invoiceNumber}
+Date: ${new Date().toLocaleDateString()}
+Due Date: ${invoiceData.dueDate.toLocaleDateString()}
 
-Patient ID: ${invoice.patientId}
-Services: ${invoice.description}
-Amount: $${invoice.amount.toFixed(2)}
-Payment Method: ${invoice.paymentMethod}
-Status: ${invoice.paymentStatus}
+Patient ID: ${invoiceForm.patientId}
+Services: ${invoiceForm.description}
+Amount: $${amount.toFixed(2)}
+Payment Method: ${invoiceForm.paymentMethod}
+Status: pending
+
+Database Record ID: ${savedInvoice.id}
 
 Thank you for choosing our laboratory services!
-    `.trim();
-    
-    // Create and download invoice file
-    const blob = new Blob([invoiceContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = `invoice-${invoice.invoiceNumber}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    alert(`Invoice Created Successfully!\n\n` +
-      `Invoice #: ${invoice.invoiceNumber}\n` +
-      `Patient ID: ${invoice.patientId}\n` +
-      `Amount: $${invoice.amount.toFixed(2)}\n` +
-      `Due Date: ${invoice.dueDate}\n\n` +
-      `Invoice has been generated and downloaded.`);
-    
-    // Reset form
-    setInvoiceForm({
-      patientId: '',
-      description: '',
-      amount: '',
-      paymentMethod: '',
-      dueDate: '',
-    });
+      `.trim();
+      
+      // Create and download invoice file
+      const blob = new Blob([invoiceContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `invoice-${invoiceNumber}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert(`Invoice Created & Saved to Database!\n\n` +
+        `Invoice #: ${invoiceNumber}\n` +
+        `Database ID: ${savedInvoice.id}\n` +
+        `Patient ID: ${invoiceForm.patientId}\n` +
+        `Amount: $${amount.toFixed(2)}\n` +
+        `Due Date: ${invoiceData.dueDate.toLocaleDateString()}\n\n` +
+        `Invoice has been permanently saved to the database and downloaded.`);
+      
+      // Reset form
+      setInvoiceForm({
+        patientId: '',
+        description: '',
+        amount: '',
+        paymentMethod: '',
+        dueDate: '',
+      });
+      
+    } catch (error) {
+      console.error('Invoice creation error:', error);
+      alert(`Failed to create invoice: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const getPaymentStatusBadge = (status: string) => {

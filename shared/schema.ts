@@ -200,6 +200,61 @@ export const financialRecords = pgTable("financial_records", {
   dueDate: timestamp("due_date"),
 });
 
+// Lab settings table
+export const labSettings = pgTable("lab_settings", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  labName: varchar("lab_name", { length: 200 }).notNull(),
+  address: text("address"),
+  phoneNumber: varchar("phone_number", { length: 20 }),
+  email: varchar("email", { length: 255 }),
+  website: varchar("website", { length: 255 }),
+  licenseNumber: varchar("license_number", { length: 100 }),
+  accreditation: varchar("accreditation", { length: 100 }),
+  director: varchar("director", { length: 200 }),
+  timezone: varchar("timezone", { length: 50 }),
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  updatedBy: uuid("updated_by").references(() => users.id).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// System settings table
+export const systemSettings = pgTable("system_settings", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: varchar("setting_key", { length: 100 }).notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  settingType: varchar("setting_type", { length: 20 }).notNull(), // boolean, string, number, json
+  description: text("description"),
+  updatedBy: uuid("updated_by").references(() => users.id).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Action logs table - for tracking all button actions
+export const actionLogs = pgTable("action_logs", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  actionType: varchar("action_type", { length: 100 }).notNull(),
+  actionCategory: varchar("action_category", { length: 50 }).notNull(), // financial, qc, reports, setup, etc
+  actionData: json("action_data"), // Store the actual action data
+  description: text("description"),
+  success: boolean("success").notNull().default(true),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Reports table
+export const reports = pgTable("reports", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportType: varchar("report_type", { length: 100 }).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  filters: json("filters"),
+  generatedBy: uuid("generated_by").references(() => users.id).notNull(),
+  filePath: varchar("file_path", { length: 500 }),
+  fileSize: integer("file_size"),
+  format: varchar("format", { length: 10 }).notNull(), // pdf, excel, csv
+  status: varchar("status", { length: 20 }).notNull().default("generating"), // generating, completed, failed
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   samplesCollected: many(samples, { relationName: "collectedBy" }),
@@ -321,6 +376,34 @@ export const financialRecordsRelations = relations(financialRecords, ({ one }) =
   }),
 }));
 
+export const labSettingsRelations = relations(labSettings, ({ one }) => ({
+  updatedBy: one(users, {
+    fields: [labSettings.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
+  updatedBy: one(users, {
+    fields: [systemSettings.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+export const actionLogsRelations = relations(actionLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [actionLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const reportsRelations = relations(reports, ({ one }) => ({
+  generatedBy: one(users, {
+    fields: [reports.generatedBy],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -373,6 +456,26 @@ export const insertTestTypeSchema = createInsertSchema(testTypes).omit({
   createdAt: true,
 });
 
+export const insertLabSettingsSchema = createInsertSchema(labSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertActionLogSchema = createInsertSchema(actionLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReportSchema = createInsertSchema(reports).omit({
+  id: true,
+  generatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -391,6 +494,17 @@ export type InsertOutboundSample = z.infer<typeof insertOutboundSampleSchema>;
 export type Worklist = typeof worklists.$inferSelect;
 export type InsertWorklist = z.infer<typeof insertWorklistSchema>;
 export type FinancialRecord = typeof financialRecords.$inferSelect;
+export type InsertFinancialRecord = z.infer<typeof insertFinancialRecordSchema>;
+export type TestType = typeof testTypes.$inferSelect;
+export type InsertTestType = z.infer<typeof insertTestTypeSchema>;
+export type LabSettings = typeof labSettings.$inferSelect;
+export type InsertLabSettings = z.infer<typeof insertLabSettingsSchema>;
+export type SystemSettings = typeof systemSettings.$inferSelect;
+export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
+export type ActionLog = typeof actionLogs.$inferSelect;
+export type InsertActionLog = z.infer<typeof insertActionLogSchema>;
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = z.infer<typeof insertReportSchema>;
 export type InsertFinancialRecord = z.infer<typeof insertFinancialRecordSchema>;
 export type TestType = typeof testTypes.$inferSelect;
 export type InsertTestType = z.infer<typeof insertTestTypeSchema>;

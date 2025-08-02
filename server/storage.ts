@@ -1,10 +1,13 @@
 import { 
   users, patients, samples, testRequests, testResults, testTypes, 
   qualityControls, outboundSamples, worklists, financialRecords,
+  labSettings, systemSettings, actionLogs, reports,
   type User, type InsertUser, type Patient, type InsertPatient,
   type Sample, type InsertSample, type TestRequest, type InsertTestRequest,
   type TestResult, type InsertTestResult, type TestType, type InsertTestType,
-  type QualityControl, type InsertQualityControl
+  type QualityControl, type InsertQualityControl, type FinancialRecord, type InsertFinancialRecord,
+  type LabSettings, type InsertLabSettings, type SystemSettings, type InsertSystemSettings,
+  type ActionLog, type InsertActionLog, type Report, type InsertReport
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, like, count, sum, avg, gte } from "drizzle-orm";
@@ -59,6 +62,26 @@ export interface IStorage {
     pendingTests: number;
     activeUsers: number;
   }>;
+
+  // Financial operations
+  createFinancialRecord(record: InsertFinancialRecord): Promise<FinancialRecord>;
+  getFinancialRecords(limit?: number): Promise<Array<FinancialRecord & { patient: Patient }>>;
+  updatePaymentStatus(invoiceNumber: string, status: string): Promise<void>;
+
+  // Settings operations
+  getLabSettings(): Promise<LabSettings | undefined>;
+  saveLabSettings(settings: InsertLabSettings): Promise<LabSettings>;
+  getSystemSetting(key: string): Promise<SystemSettings | undefined>;
+  saveSystemSetting(setting: InsertSystemSettings): Promise<SystemSettings>;
+
+  // Action logging
+  logAction(action: InsertActionLog): Promise<ActionLog>;
+  getActionLogs(limit?: number): Promise<Array<ActionLog & { user: User }>>;
+
+  // Reports
+  createReport(report: InsertReport): Promise<Report>;
+  getReports(limit?: number): Promise<Array<Report & { generatedBy: User }>>;
+  updateReportStatus(id: string, status: string, filePath?: string, fileSize?: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -359,6 +382,135 @@ export class DatabaseStorage implements IStorage {
       pendingTests: pendingTests.count,
       activeUsers: activeUsers.count,
     };
+  }
+
+  // Financial operations
+  async createFinancialRecord(insertFinancialRecord: InsertFinancialRecord): Promise<FinancialRecord> {
+    const [record] = await db
+      .insert(financialRecords)
+      .values(insertFinancialRecord)
+      .returning();
+    return record;
+  }
+
+  async getFinancialRecords(limit: number = 50): Promise<Array<FinancialRecord & { patient: Patient }>> {
+    const result = await db
+      .select()
+      .from(financialRecords)
+      .innerJoin(patients, eq(financialRecords.patientId, patients.id))
+      .orderBy(desc(financialRecords.transactionDate))
+      .limit(limit);
+
+    return result.map(row => ({
+      ...row.financial_records,
+      patient: row.patients
+    }));
+  }
+
+  async updatePaymentStatus(invoiceNumber: string, status: string): Promise<void> {
+    await db
+      .update(financialRecords)
+      .set({ paymentStatus: status })
+      .where(eq(financialRecords.invoiceNumber, invoiceNumber));
+  }
+
+  // Settings operations
+  async getLabSettings(): Promise<LabSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(labSettings)
+      .orderBy(desc(labSettings.updatedAt))
+      .limit(1);
+    return settings || undefined;
+  }
+
+  async saveLabSettings(insertLabSettings: InsertLabSettings): Promise<LabSettings> {
+    const [settings] = await db
+      .insert(labSettings)
+      .values(insertLabSettings)
+      .returning();
+    return settings;
+  }
+
+  async getSystemSetting(key: string): Promise<SystemSettings | undefined> {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.settingKey, key));
+    return setting || undefined;
+  }
+
+  async saveSystemSetting(insertSystemSettings: InsertSystemSettings): Promise<SystemSettings> {
+    const [setting] = await db
+      .insert(systemSettings)
+      .values(insertSystemSettings)
+      .onConflictDoUpdate({
+        target: systemSettings.settingKey,
+        set: {
+          settingValue: insertSystemSettings.settingValue,
+          updatedBy: insertSystemSettings.updatedBy,
+          updatedAt: new Date(),
+        }
+      })
+      .returning();
+    return setting;
+  }
+
+  // Action logging
+  async logAction(insertActionLog: InsertActionLog): Promise<ActionLog> {
+    const [action] = await db
+      .insert(actionLogs)
+      .values(insertActionLog)
+      .returning();
+    return action;
+  }
+
+  async getActionLogs(limit: number = 100): Promise<Array<ActionLog & { user: User }>> {
+    const result = await db
+      .select()
+      .from(actionLogs)
+      .innerJoin(users, eq(actionLogs.userId, users.id))
+      .orderBy(desc(actionLogs.createdAt))
+      .limit(limit);
+
+    return result.map(row => ({
+      ...row.action_logs,
+      user: row.users
+    }));
+  }
+
+  // Reports
+  async createReport(insertReport: InsertReport): Promise<Report> {
+    const [report] = await db
+      .insert(reports)
+      .values(insertReport)
+      .returning();
+    return report;
+  }
+
+  async getReports(limit: number = 50): Promise<Array<Report & { generatedBy: User }>> {
+    const result = await db
+      .select()
+      .from(reports)
+      .innerJoin(users, eq(reports.generatedBy, users.id))
+      .orderBy(desc(reports.generatedAt))
+      .limit(limit);
+
+    return result.map(row => ({
+      ...row.reports,
+      generatedBy: row.users
+    }));
+  }
+
+  async updateReportStatus(id: string, status: string, filePath?: string, fileSize?: number): Promise<void> {
+    const updateData: any = { status };
+    if (filePath) updateData.filePath = filePath;
+    if (fileSize) updateData.fileSize = fileSize;
+
+    await db
+      .update(reports)
+      .set(updateData)
+      .where(eq(reports.id, id));
   }
 }
 

@@ -51,7 +51,7 @@ export default function Reports() {
     { metric: 'Equipment Uptime', value: 99.2, target: 98, unit: '%' },
   ];
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     console.log('Generating report with filters:', reportFilters);
     
     if (!reportFilters.reportType) {
@@ -64,49 +64,76 @@ export default function Reports() {
       return;
     }
     
-    // Generate report content based on type
-    let reportContent = '';
-    const reportDate = new Date().toLocaleDateString();
-    
-    switch (reportFilters.reportType) {
-      case 'sample_volume':
-        reportContent = `Sample Volume Report - ${reportDate}\n` +
-          `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
-          `Department: ${reportFilters.department || 'All'}\n\n` +
-          sampleVolumeData.map(item => `${item.month}: ${item.samples} samples, ${item.completed} completed`).join('\n');
-        break;
-      case 'turnaround_time':
-        reportContent = `Turnaround Time Report - ${reportDate}\n` +
-          `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n\n` +
-          turnaroundTimeData.map(item => `${item.test}: Target ${item.target}h, Actual ${item.actual}h (${item.status})`).join('\n');
-        break;
-      case 'quality_metrics':
-        reportContent = `Quality Metrics Report - ${reportDate}\n` +
-          `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n\n` +
-          qualityMetrics.map(item => `${item.metric}: ${item.value}${item.unit} (Target: ${item.target}${item.unit})`).join('\n');
-        break;
-      default:
-        reportContent = `General Lab Report - ${reportDate}\n` +
-          `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
-          `Department: ${reportFilters.department || 'All'}\n\n` +
-          `Report generated successfully with current lab data.`;
+    try {
+      // Generate report content based on type
+      let reportContent = '';
+      const reportDate = new Date().toLocaleDateString();
+      
+      switch (reportFilters.reportType) {
+        case 'sample_volume':
+          reportContent = `Sample Volume Report - ${reportDate}\n` +
+            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
+            `Department: ${reportFilters.department || 'All'}\n\n` +
+            sampleVolumeData.map(item => `${item.month}: ${item.samples} samples, ${item.completed} completed`).join('\n');
+          break;
+        case 'turnaround_time':
+          reportContent = `Turnaround Time Report - ${reportDate}\n` +
+            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n\n` +
+            turnaroundTimeData.map(item => `${item.test}: Target ${item.target}h, Actual ${item.actual}h (${item.status})`).join('\n');
+          break;
+        case 'quality_metrics':
+          reportContent = `Quality Metrics Report - ${reportDate}\n` +
+            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n\n` +
+            qualityMetrics.map(item => `${item.metric}: ${item.value}${item.unit} (Target: ${item.target}${item.unit})`).join('\n');
+          break;
+        default:
+          reportContent = `General Lab Report - ${reportDate}\n` +
+            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
+            `Department: ${reportFilters.department || 'All'}\n\n` +
+            `Report generated successfully with current lab data.`;
+      }
+      
+      // Create report data for database
+      const reportData = {
+        reportType: reportFilters.reportType,
+        title: `${reportFilters.reportType.replace('_', ' ')} Report - ${reportDate}`,
+        filters: reportFilters,
+        generatedBy: 'current-user-id', // In real app, get from auth context
+        format: reportFilters.format,
+        status: 'completed'
+      };
+      
+      // Save report to database
+      const { reportsApi } = await import('@/lib/api');
+      const savedReport = await reportsApi.generate(reportData);
+      
+      console.log('Report Saved to Database:', savedReport);
+      
+      // Create and download file
+      const fileExtension = reportFilters.format === 'excel' ? 'csv' : reportFilters.format;
+      const mimeType = reportFilters.format === 'pdf' ? 'text/plain' : 'text/csv';
+      const blob = new Blob([reportContent], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `lab-report-${reportFilters.reportType}-${new Date().toISOString().split('T')[0]}.${fileExtension}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert(`Report Generated & Saved to Database!\n\n` +
+        `Report Type: ${reportFilters.reportType.replace('_', ' ')}\n` +
+        `Database ID: ${savedReport.id}\n` +
+        `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
+        `Format: ${reportFilters.format}\n\n` +
+        `Report has been permanently saved to the database and downloaded.`);
+      
+    } catch (error) {
+      console.error('Report generation error:', error);
+      alert(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    // Create and download file
-    const fileExtension = reportFilters.format === 'excel' ? 'csv' : reportFilters.format;
-    const mimeType = reportFilters.format === 'pdf' ? 'text/plain' : 'text/csv';
-    const blob = new Blob([reportContent], { type: mimeType });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = `lab-report-${reportFilters.reportType}-${new Date().toISOString().split('T')[0]}.${fileExtension}`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    alert(`${reportFilters.reportType.replace('_', ' ')} report generated and downloaded successfully!`);
   };
 
   const handleExport = (format: string) => {

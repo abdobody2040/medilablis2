@@ -103,7 +103,7 @@ export default function Setup() {
     },
   ];
 
-  const handleLabSettingsSubmit = (e: React.FormEvent) => {
+  const handleLabSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Saving lab settings:', labSettings);
     
@@ -113,20 +113,31 @@ export default function Setup() {
       return;
     }
     
-    const savedSettings = {
-      ...labSettings,
-      lastUpdated: new Date().toLocaleString(),
-      updatedBy: 'Current User'
-    };
-    
-    console.log('Lab Settings Saved:', savedSettings);
-    
-    alert(`Laboratory Settings Saved Successfully!\n\n` +
-      `Lab Name: ${savedSettings.labName}\n` +
-      `License: ${savedSettings.licenseNumber}\n` +
-      `Director: ${savedSettings.director}\n` +
-      `Last Updated: ${savedSettings.lastUpdated}\n\n` +
-      `Settings have been applied to the system.`);
+    try {
+      // Prepare settings data for database
+      const settingsData = {
+        ...labSettings,
+        updatedBy: 'current-user-id' // In real app, get from auth context
+      };
+      
+      // Save to database using API
+      const { settingsApi } = await import('@/lib/api');
+      const savedSettings = await settingsApi.saveLabSettings(settingsData);
+      
+      console.log('Lab Settings Saved to Database:', savedSettings);
+      
+      alert(`Laboratory Settings Saved to Database!\n\n` +
+        `Database ID: ${savedSettings.id}\n` +
+        `Lab Name: ${savedSettings.labName}\n` +
+        `License Number: ${savedSettings.licenseNumber}\n` +
+        `Director: ${savedSettings.director}\n` +
+        `Last Updated: ${new Date(savedSettings.updatedAt).toLocaleString()}\n\n` +
+        `Settings have been permanently saved to the database.`);
+      
+    } catch (error) {
+      console.error('Lab settings save error:', error);
+      alert(`Failed to save lab settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handleTestConfigSubmit = (e: React.FormEvent) => {
