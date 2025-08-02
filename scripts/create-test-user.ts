@@ -9,7 +9,7 @@ async function createTestUser() {
       password: "admin123",
       firstName: "Admin",
       lastName: "User",
-      role: "administrator",
+      role: "admin",
       isActive: true
     };
 
