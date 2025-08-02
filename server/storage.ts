@@ -7,7 +7,7 @@ import {
   type QualityControl, type InsertQualityControl
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, asc, like, count, sum, avg } from "drizzle-orm";
+import { eq, and, desc, asc, like, count, sum, avg, gte } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -197,6 +197,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>> {
+    // Validate that the status is a valid enum value
+    const validStatuses = ['received', 'in_progress', 'completed', 'rejected', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Invalid sample status: ${status}`);
+    }
+    
     const result = await db
       .select()
       .from(samples)
@@ -217,7 +223,7 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .select({ count: count() })
       .from(samples)
-      .where(eq(samples.receivedDateTime >= today as any, true));
+      .where(gte(samples.receivedDateTime, today));
     
     return result.count;
   }
@@ -289,7 +295,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(testRequests.status, "completed"),
-          eq(testRequests.completedDateTime >= today as any, true)
+          gte(testRequests.completedDateTime, today)
         )
       );
     
@@ -330,7 +336,7 @@ export class DatabaseStorage implements IStorage {
     const [dailySamples] = await db
       .select({ count: count() })
       .from(samples)
-      .where(eq(samples.receivedDateTime >= today as any, true));
+      .where(gte(samples.receivedDateTime, today));
 
     const [resultsReady] = await db
       .select({ count: count() })

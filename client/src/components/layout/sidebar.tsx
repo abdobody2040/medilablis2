@@ -102,16 +102,17 @@ export function Sidebar() {
                       
                       return (
                         <li key={item.name}>
-                          <Link href={item.href}>
-                            <a className={cn(
+                          <Link 
+                            href={item.href}
+                            className={cn(
                               'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                               active
                                 ? 'bg-primary/10 text-primary dark:bg-primary/20'
                                 : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
-                            )}>
-                              {Icon && <Icon className="h-5 w-5 shrink-0" />}
-                              {item.name}
-                            </a>
+                            )}
+                          >
+                            {Icon && <Icon className="h-5 w-5 shrink-0" />}
+                            {item.name}
                           </Link>
                         </li>
                       );
@@ -153,19 +154,18 @@ export function Sidebar() {
                     
                     return (
                       <li key={item.name}>
-                        <Link href={item.href}>
-                          <a 
-                            className={cn(
-                              'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-                              active
-                                ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                                : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
-                            )}
-                            onClick={() => setSidebarOpen(false)}
-                          >
-                            {Icon && <Icon className="h-5 w-5 shrink-0" />}
-                            {item.name}
-                          </a>
+                        <Link 
+                          href={item.href}
+                          className={cn(
+                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+                            active
+                              ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                              : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
+                          )}
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          {Icon && <Icon className="h-5 w-5 shrink-0" />}
+                          {item.name}
                         </Link>
                       </li>
                     );
@@ -182,19 +182,18 @@ export function Sidebar() {
                       
                       return (
                         <li key={item.name}>
-                          <Link href={item.href}>
-                            <a 
-                              className={cn(
-                                'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-                                active
-                                  ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                                  : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
-                              )}
-                              onClick={() => setSidebarOpen(false)}
-                            >
-                              {Icon && <Icon className="h-5 w-5 shrink-0" />}
-                              {item.name}
-                            </a>
+                          <Link 
+                            href={item.href}
+                            className={cn(
+                              'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+                              active
+                                ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                                : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
+                            )}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            {Icon && <Icon className="h-5 w-5 shrink-0" />}
+                            {item.name}
                           </Link>
                         </li>
                       );

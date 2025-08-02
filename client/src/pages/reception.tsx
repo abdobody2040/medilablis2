@@ -182,7 +182,7 @@ export default function Reception() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {patients.slice(0, 10).map((patient) => (
+                  {patients.slice(0, 10).map((patient: any) => (
                     <div
                       key={patient.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
