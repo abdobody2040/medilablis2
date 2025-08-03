@@ -505,6 +505,3 @@ export type ActionLog = typeof actionLogs.$inferSelect;
 export type InsertActionLog = z.infer<typeof insertActionLogSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
-export type InsertFinancialRecord = z.infer<typeof insertFinancialRecordSchema>;
-export type TestType = typeof testTypes.$inferSelect;
-export type InsertTestType = z.infer<typeof insertTestTypeSchema>;

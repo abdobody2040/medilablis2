@@ -515,7 +515,7 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => ({
       ...row.reports,
       generatedBy: row.users
-    }));
+    } as Report & { generatedBy: User }));
   }
 
   async updateReportStatus(id: string, status: string, filePath?: string, fileSize?: number): Promise<void> {

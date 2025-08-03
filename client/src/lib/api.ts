@@ -153,5 +153,3 @@ export const actionLogsApi = {
   }
 };
 
-// Export settingsApi for setup page
-export { settingsApi };
