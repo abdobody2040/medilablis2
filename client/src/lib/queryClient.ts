@@ -3,46 +3,33 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
       refetchOnWindowFocus: false,
     },
-    mutations: {
-      retry: 1,
+  },
+  // Add default queryFn to handle the console errors
+  queryCache: undefined,
+  mutationCache: undefined,
+});
+
+// Default query function for React Query
+queryClient.setDefaultOptions({
+  queries: {
+    queryFn: async ({ queryKey, signal }) => {
+      const url = Array.isArray(queryKey) ? queryKey[0] : queryKey;
+
+      if (typeof url !== 'string') {
+        throw new Error('Query key must be a string or array with string as first element');
+      }
+
+      const response = await fetch(url, { signal });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return response.json();
     },
   },
 });
-
-export async function apiRequest(method: string, url: string, data?: any) {
-  try {
-    const options: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies for session management
-    };
-
-    if (data) {
-      options.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(url, options);
-
-    if (!response.ok) {
-      let errorMessage = `HTTP error! status: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-      } catch {
-        // If JSON parsing fails, use the default error message
-      }
-      throw new Error(errorMessage);
-    }
-
-    return response;
-  } catch (error) {
-    console.error('API Request failed:', error);
-    throw error;
-  }
-}

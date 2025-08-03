@@ -1,197 +1,214 @@
 import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, FileText, Download, Calendar, TrendingUp, PieChart, Activity } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  FileText, 
+  TrendingUp, 
+  BarChart3, 
+  Download, 
+  Calendar, 
+  Filter,
+  Search,
+  Users,
+  TestTube,
+  Clock,
+  CheckCircle
+} from 'lucide-react';
+import { reportsApi } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Reports() {
-  const [reportFilters, setReportFilters] = useState({
-    reportType: '',
-    dateFrom: '',
-    dateTo: '',
-    department: '',
+  const { toast } = useToast();
+
+  const [reportForm, setReportForm] = useState({
+    reportType: 'daily_summary',
+    title: '',
+    startDate: '',
+    endDate: '',
     format: 'pdf',
+    filters: {
+      testTypes: [] as string[],
+      departments: [] as string[],
+      priority: 'all',
+    },
   });
 
-  // Mock data for charts
-  const sampleVolumeData = [
-    { month: 'Jan', samples: 1250, completed: 1180 },
-    { month: 'Feb', samples: 1180, completed: 1140 },
-    { month: 'Mar', samples: 1350, completed: 1290 },
-    { month: 'Apr', samples: 1420, completed: 1380 },
-    { month: 'May', samples: 1380, completed: 1340 },
-    { month: 'Jun', samples: 1480, completed: 1450 },
-  ];
+  const [trendAnalysis, setTrendAnalysis] = useState({
+    period: 'monthly',
+    metrics: 'sample_volume',
+    startDate: '',
+    endDate: '',
+  });
 
-  const departmentData = [
-    { name: 'Chemistry', value: 35, count: 1250, color: 'hsl(207, 90%, 54%)' },
-    { name: 'Hematology', value: 25, count: 890, color: 'hsl(142, 71%, 45%)' },
-    { name: 'Microbiology', value: 20, count: 710, color: 'hsl(45, 93%, 47%)' },
-    { name: 'Immunology', value: 15, count: 535, color: 'hsl(262, 52%, 47%)' },
-    { name: 'Pathology', value: 5, count: 180, color: 'hsl(346, 77%, 49%)' },
-  ];
+  // Fetch existing reports
+  const { data: reports = [], isLoading: loadingReports, refetch: refetchReports } = useQuery({
+    queryKey: ['/api/reports'],
+    queryFn: () => reportsApi.getReports(),
+  });
 
-  const turnaroundTimeData = [
-    { test: 'CBC', target: 2, actual: 1.8, status: 'on_target' },
-    { test: 'BMP', target: 3, actual: 2.9, status: 'on_target' },
-    { test: 'Lipid Panel', target: 4, actual: 4.2, status: 'delayed' },
-    { test: 'Liver Panel', target: 4, actual: 3.7, status: 'on_target' },
-    { test: 'Thyroid', target: 6, actual: 5.8, status: 'on_target' },
-    { test: 'Culture', target: 48, actual: 46, status: 'on_target' },
-  ];
+  // Generate report mutation
+  const generateReportMutation = useMutation({
+    mutationFn: reportsApi.generateReport,
+    onSuccess: (data) => {
+      toast({
+        title: "Report Generated",
+        description: `Report "${data.title}" is being generated`,
+      });
 
-  const qualityMetrics = [
-    { metric: 'QC Pass Rate', value: 98.5, target: 95, unit: '%' },
-    { metric: 'Repeat Rate', value: 2.1, target: 3, unit: '%' },
-    { metric: 'Critical Values', value: 12, target: 15, unit: 'alerts' },
-    { metric: 'Equipment Uptime', value: 99.2, target: 98, unit: '%' },
-  ];
+      // Reset form
+      setReportForm({
+        reportType: 'daily_summary',
+        title: '',
+        startDate: '',
+        endDate: '',
+        format: 'pdf',
+        filters: {
+          testTypes: [],
+          departments: [],
+          priority: 'all',
+        },
+      });
 
-  const handleGenerateReport = async () => {
-    console.log('Generating report with filters:', reportFilters);
+      // Refetch reports
+      refetchReports();
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Report Generation Failed",
+        description: error.message || "Failed to generate report",
+      });
+    },
+  });
 
-    if (!reportFilters.reportType) {
-      alert('Please select a report type');
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate required fields
+    if (!reportForm.title || !reportForm.startDate || !reportForm.endDate) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+      });
       return;
     }
 
-    if (!reportFilters.dateFrom || !reportFilters.dateTo) {
-      alert('Please select date range');
+    // Get current user
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!currentUser.id) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Please log in to continue",
+      });
       return;
     }
 
-    try {
-      // Generate report content based on type
-      let reportContent = '';
-      const reportDate = new Date().toLocaleDateString();
-
-      switch (reportFilters.reportType) {
-        case 'sample_volume':
-          reportContent = `Sample Volume Report - ${reportDate}\n` +
-            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
-            `Department: ${reportFilters.department || 'All'}\n\n` +
-            sampleVolumeData.map(item => `${item.month}: ${item.samples} samples, ${item.completed} completed`).join('\n');
-          break;
-        case 'turnaround_time':
-          reportContent = `Turnaround Time Report - ${reportDate}\n` +
-            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n\n` +
-            turnaroundTimeData.map(item => `${item.test}: Target ${item.target}h, Actual ${item.actual}h (${item.status})`).join('\n');
-          break;
-        case 'quality_metrics':
-          reportContent = `Quality Metrics Report - ${reportDate}\n` +
-            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n\n` +
-            qualityMetrics.map(item => `${item.metric}: ${item.value}${item.unit} (Target: ${item.target}${item.unit})`).join('\n');
-          break;
-        default:
-          reportContent = `General Lab Report - ${reportDate}\n` +
-            `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
-            `Department: ${reportFilters.department || 'All'}\n\n` +
-            `Report generated successfully with current lab data.`;
-      }
-
-      // Create report data for database
-      const reportData = {
-        reportType: reportFilters.reportType,
-        title: `${reportFilters.reportType.replace('_', ' ')} Report - ${reportDate}`,
-        filters: reportFilters,
-        generatedBy: 'current-user-id', // In real app, get from auth context
-        format: reportFilters.format,
-        status: 'completed'
-      };
-
-      // Save report to database
-      const { reportsApi } = await import('@/lib/api');
-      const savedReport = await reportsApi.generate(reportData);
-
-      console.log('Report Saved to Database:', savedReport);
-
-      // Create and download file
-      const fileExtension = reportFilters.format === 'excel' ? 'csv' : reportFilters.format;
-      const mimeType = reportFilters.format === 'pdf' ? 'text/plain' : 'text/csv';
-      const blob = new Blob([reportContent], { type: mimeType });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `lab-report-${reportFilters.reportType}-${new Date().toISOString().split('T')[0]}.${fileExtension}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      alert(`Report Generated & Saved to Database!\n\n` +
-        `Report Type: ${reportFilters.reportType.replace('_', ' ')}\n` +
-        `Database ID: ${savedReport.id}\n` +
-        `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
-        `Format: ${reportFilters.format}\n\n` +
-        `Report has been permanently saved to the database and downloaded.`);
-
-    } catch (error) {
-      console.error('Report generation error:', error);
-      alert(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const handleExport = (format: string) => {
-    console.log(`Exporting in ${format} format`);
-
-    // Prepare comprehensive data export
-    const exportData = {
-      sampleVolume: sampleVolumeData,
-      departmentBreakdown: departmentData,
-      turnaroundTimes: turnaroundTimeData,
-      qualityMetrics: qualityMetrics,
-      exportDate: new Date().toLocaleDateString(),
-      generatedBy: 'Laboratory Information System'
+    const reportData = {
+      reportType: reportForm.reportType,
+      title: reportForm.title,
+      filters: {
+        startDate: reportForm.startDate,
+        endDate: reportForm.endDate,
+        ...reportForm.filters,
+      },
+      generatedBy: currentUser.id,
+      format: reportForm.format,
+      status: 'generating',
     };
 
-    let content = '';
-    let fileName = '';
-    let mimeType = '';
+    generateReportMutation.mutate(reportData);
+  };
 
-    if (format === 'excel' || format === 'csv') {
-      // Create CSV format
-      content = `Laboratory Data Export - ${exportData.exportDate}\n\n` +
-        `Sample Volume Data:\n` +
-        `Month,Samples,Completed\n` +
-        exportData.sampleVolume.map(item => `${item.month},${item.samples},${item.completed}`).join('\n') +
-        `\n\nDepartment Breakdown:\n` +
-        `Department,Percentage,Count\n` +
-        exportData.departmentBreakdown.map(item => `${item.name},${item.value}%,${item.count}`).join('\n') +
-        `\n\nTurnaround Times:\n` +
-        `Test,Target Hours,Actual Hours,Status\n` +
-        exportData.turnaroundTimes.map(item => `${item.test},${item.target},${item.actual},${item.status}`).join('\n') +
-        `\n\nQuality Metrics:\n` +
-        `Metric,Value,Target,Unit\n` +
-        exportData.qualityMetrics.map(item => `${item.metric},${item.value},${item.target},${item.unit}`).join('\n');
-
-      fileName = `lab-data-export-${new Date().toISOString().split('T')[0]}.csv`;
-      mimeType = 'text/csv';
-    } else {
-      // Create JSON format for other types
-      content = JSON.stringify(exportData, null, 2);
-      fileName = `lab-data-export-${new Date().toISOString().split('T')[0]}.json`;
-      mimeType = 'application/json';
+  const handleTrendAnalysis = async () => {
+    // Validate trend analysis parameters
+    if (!trendAnalysis.startDate || !trendAnalysis.endDate) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please select start and end dates for trend analysis",
+      });
+      return;
     }
 
-    // Create and download file
-    const blob = new Blob([content], { type: mimeType });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    // Get current user
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!currentUser.id) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Please log in to continue",
+      });
+      return;
+    }
 
-    alert(`Lab data exported successfully in ${format.toUpperCase()} format!`);
+    const trendReportData = {
+      reportType: 'trend_analysis',
+      title: `Trend Analysis - ${trendAnalysis.metrics} (${trendAnalysis.period})`,
+      filters: {
+        startDate: trendAnalysis.startDate,
+        endDate: trendAnalysis.endDate,
+        period: trendAnalysis.period,
+        metrics: trendAnalysis.metrics,
+      },
+      generatedBy: currentUser.id,
+      format: 'pdf',
+      status: 'generating',
+    };
+
+    generateReportMutation.mutate(trendReportData);
+
+    toast({
+      title: "Trend Analysis Started",
+      description: `Generating ${trendAnalysis.period} trend analysis for ${trendAnalysis.metrics}`,
+    });
   };
+
+  const getReportStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return (
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Ready
+          </Badge>
+        );
+      case 'generating':
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Generating
+          </Badge>
+        );
+      case 'failed':
+        return (
+          <Badge className="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+            Failed
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const reportTypes = [
+    { value: 'daily_summary', label: 'Daily Summary' },
+    { value: 'weekly_summary', label: 'Weekly Summary' },
+    { value: 'monthly_summary', label: 'Monthly Summary' },
+    { value: 'test_volume', label: 'Test Volume Report' },
+    { value: 'turnaround_time', label: 'Turnaround Time Analysis' },
+    { value: 'quality_metrics', label: 'Quality Metrics' },
+    { value: 'financial_summary', label: 'Financial Summary' },
+    { value: 'user_activity', label: 'User Activity Report' },
+  ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -202,322 +219,219 @@ export default function Reports() {
             Reports & Analytics
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Laboratory workflow and statistical reports
+            Generate reports and analyze laboratory data
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => handleExport('excel')}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-gray-500" />
-            <span className="text-sm text-gray-500">
-              Real-time analytics
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-gray-500" />
+          <span className="text-sm text-gray-500">
+            Report Generation
+          </span>
         </div>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
+      <Tabs defaultValue="generate" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Dashboard
-          </TabsTrigger>
           <TabsTrigger value="generate" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Generate Reports
+            Generate Report
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
+          <TabsTrigger value="trends" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Analytics
+            Trend Analysis
+          </TabsTrigger>
+          <TabsTrigger value="existing" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Existing Reports
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="dashboard" className="mt-6 space-y-6">
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Monthly Samples
-                    </p>
-                    <p className="text-2xl font-bold text-blue-600">
-                      1,480
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">+7.2% from last month</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/20">
-                    <BarChart3 className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Completion Rate
-                    </p>
-                    <p className="text-2xl font-bold text-green-600">
-                      98.0%
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">+0.5% improvement</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-lg flex items-center justify-center bg-green-100 dark:bg-green-900/20">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Avg Turnaround
-                    </p>
-                    <p className="text-2xl font-bold text-orange-600">
-                      3.2h
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">+0.1h from target</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-lg flex items-center justify-center bg-orange-100 dark:bg-orange-900/20">
-                    <Calendar className="h-6 w-6 text-orange-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      QC Pass Rate
-                    </p>
-                    <p className="text-2xl font-bold text-purple-600">
-                      98.5%
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">Above target (95%)</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-lg flex items-center justify-center bg-purple-100 dark:bg-purple-900/20">
-                    <Activity className="h-6 w-6 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Sample Volume Trend */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sample Volume Trend (6 Months)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={sampleVolumeData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
-                      <XAxis dataKey="month" className="text-xs" />
-                      <YAxis className="text-xs" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '6px',
-                        }}
-                      />
-                      <Bar dataKey="samples" fill="hsl(207, 90%, 54%)" name="Total Samples" />
-                      <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Completed" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Department Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sample Distribution by Department</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                      <Pie
-                        data={departmentData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={80}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {departmentData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '6px',
-                        }}
-                        formatter={(value: number, name: string, props: any) => [
-                          `${value}% (${props.payload.count} samples)`,
-                          name
-                        ]}
-                      />
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-4 justify-center">
-                  {departmentData.map((item) => (
-                    <div key={item.name} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {item.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Performance Tables */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Turnaround Times */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Turnaround Time Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-2 text-sm font-medium">Test</th>
-                        <th className="text-left py-2 text-sm font-medium">Target (hrs)</th>
-                        <th className="text-left py-2 text-sm font-medium">Actual (hrs)</th>
-                        <th className="text-left py-2 text-sm font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {turnaroundTimeData.map((item, index) => (
-                        <tr key={index}>
-                          <td className="py-2 text-sm font-medium">{item.test}</td>
-                          <td className="py-2 text-sm">{item.target}</td>
-                          <td className="py-2 text-sm">{item.actual}</td>
-                          <td className="py-2">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              item.status === 'on_target' 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                            }`}>
-                              {item.status === 'on_target' ? 'On Target' : 'Delayed'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quality Metrics */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quality Metrics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {qualityMetrics.map((metric, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {metric.metric}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Target: {metric.target}{metric.unit}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-bold ${
-                          metric.value >= metric.target ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {metric.value}{metric.unit}
-                        </p>
-                        <p className={`text-xs ${
-                          metric.value >= metric.target ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {metric.value >= metric.target ? '✓ Met' : '✗ Below'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="generate" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Generate Custom Report
+                Generate New Report
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleReportSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="reportType">Report Type *</Label>
+                    <Select 
+                      value={reportForm.reportType} 
+                      onValueChange={(value) => setReportForm(prev => ({ ...prev, reportType: value }))}
+                      disabled={generateReportMutation.isPending}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {reportTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="format">Format *</Label>
+                    <Select 
+                      value={reportForm.format} 
+                      onValueChange={(value) => setReportForm(prev => ({ ...prev, format: value }))}
+                      disabled={generateReportMutation.isPending}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                        <SelectItem value="excel">Excel</SelectItem>
+                        <SelectItem value="csv">CSV</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="title">Report Title *</Label>
+                  <Input
+                    id="title"
+                    required
+                    value={reportForm.title}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., December 2024 Lab Summary"
+                    disabled={generateReportMutation.isPending}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startDate">Start Date *</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      required
+                      value={reportForm.startDate}
+                      onChange={(e) => setReportForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      disabled={generateReportMutation.isPending}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="endDate">End Date *</Label>
+                    <Input
+                      id="endDate"
+                      type="date"
+                      required
+                      value={reportForm.endDate}
+                      onChange={(e) => setReportForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      disabled={generateReportMutation.isPending}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Report Filters</h3>
+
+                  <div>
+                    <Label htmlFor="priority">Priority Level</Label>
+                    <Select 
+                      value={reportForm.filters.priority} 
+                      onValueChange={(value) => setReportForm(prev => ({ 
+                        ...prev, 
+                        filters: { ...prev.filters, priority: value }
+                      }))}
+                      disabled={generateReportMutation.isPending}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Priorities</SelectItem>
+                        <SelectItem value="routine">Routine</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="stat">STAT</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button 
+                    type="submit" 
+                    disabled={generateReportMutation.isPending}
+                    className="min-w-32"
+                  >
+                    {generateReportMutation.isPending ? (
+                      "Generating..."
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Generate Report
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trends" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Trend Analysis
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="reportType">Report Type *</Label>
-                    <Select value={reportFilters.reportType} onValueChange={(value) => setReportFilters(prev => ({ ...prev, reportType: value }))}>
+                    <Label htmlFor="period">Analysis Period</Label>
+                    <Select 
+                      value={trendAnalysis.period} 
+                      onValueChange={(value) => setTrendAnalysis(prev => ({ ...prev, period: value }))}
+                      disabled={generateReportMutation.isPending}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select report type" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="daily_summary">Daily Summary</SelectItem>
-                        <SelectItem value="weekly_summary">Weekly Summary</SelectItem>
-                        <SelectItem value="monthly_summary">Monthly Summary</SelectItem>
-                        <SelectItem value="department_performance">Department Performance</SelectItem>
-                        <SelectItem value="turnaround_time">Turnaround Time Analysis</SelectItem>
-                        <SelectItem value="quality_control">Quality Control Report</SelectItem>
-                        <SelectItem value="financial_summary">Financial Summary</SelectItem>
-                        <SelectItem value="custom">Custom Report</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label htmlFor="department">Department</Label>
-                    <Select value={reportFilters.department} onValueChange={(value) => setReportFilters(prev => ({ ...prev, department: value }))}>
+                    <Label htmlFor="metrics">Metrics</Label>
+                    <Select 
+                      value={trendAnalysis.metrics} 
+                      onValueChange={(value) => setTrendAnalysis(prev => ({ ...prev, metrics: value }))}
+                      disabled={generateReportMutation.isPending}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="All departments" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Departments</SelectItem>
-                        <SelectItem value="chemistry">Chemistry</SelectItem>
-                        <SelectItem value="hematology">Hematology</SelectItem>
-                        <SelectItem value="microbiology">Microbiology</SelectItem>
-                        <SelectItem value="immunology">Immunology</SelectItem>
-                        <SelectItem value="pathology">Pathology</SelectItem>
+                        <SelectItem value="sample_volume">Sample Volume</SelectItem>
+                        <SelectItem value="test_volume">Test Volume</SelectItem>
+                        <SelectItem value="turnaround_time">Turnaround Time</SelectItem>
+                        <SelectItem value="quality_metrics">Quality Metrics</SelectItem>
+                        <SelectItem value="revenue">Revenue</SelectItem>
+                        <SelectItem value="user_activity">User Activity</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -525,76 +439,42 @@ export default function Reports() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="dateFrom">From Date *</Label>
+                    <Label htmlFor="trendStartDate">Start Date</Label>
                     <Input
-                      id="dateFrom"
+                      id="trendStartDate"
                       type="date"
-                      required
-                      value={reportFilters.dateFrom}
-                      onChange={(e) => setReportFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                      value={trendAnalysis.startDate}
+                      onChange={(e) => setTrendAnalysis(prev => ({ ...prev, startDate: e.target.value }))}
+                      disabled={generateReportMutation.isPending}
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="dateTo">To Date *</Label>
+                    <Label htmlFor="trendEndDate">End Date</Label>
                     <Input
-                      id="dateTo"
+                      id="trendEndDate"
                       type="date"
-                      required
-                      value={reportFilters.dateTo}
-                      onChange={(e) => setReportFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                      value={trendAnalysis.endDate}
+                      onChange={(e) => setTrendAnalysis(prev => ({ ...prev, endDate: e.target.value }))}
+                      disabled={generateReportMutation.isPending}
                     />
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="format">Export Format</Label>
-                  <Select value={reportFilters.format} onValueChange={(value) => setReportFilters(prev => ({ ...prev, format: value }))}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pdf">PDF Report</SelectItem>
-                      <SelectItem value="excel">Excel Spreadsheet</SelectItem>
-                      <SelectItem value="csv">CSV Data</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex justify-end space-x-4">
+                <div className="flex justify-end">
                   <Button 
-                    variant="outline"
-                    onClick={() => {
-                      console.log('Previewing report with filters:', reportFilters);
-                      if (!reportFilters.reportType) {
-                        alert('Please select a report type to preview');
-                        return;
-                      }
-
-                      const previewData = {
-                        type: reportFilters.reportType,
-                        dateRange: `${reportFilters.dateFrom} to ${reportFilters.dateTo}`,
-                        department: reportFilters.department || 'All Departments',
-                        format: reportFilters.format,
-                        estimatedSize: '2.3 MB',
-                        estimatedPages: '15-20 pages'
-                      };
-
-                      alert(`Report Preview:\n\n` +
-                        `Type: ${previewData.type.replace('_', ' ').toUpperCase()}\n` +
-                        `Date Range: ${previewData.dateRange}\n` +
-                        `Department: ${previewData.department}\n` +
-                        `Format: ${previewData.format.toUpperCase()}\n` +
-                        `Estimated Size: ${previewData.estimatedSize}\n` +
-                        `Estimated Pages: ${previewData.estimatedPages}\n\n` +
-                        `Click "Generate Report" to create and download the full report.`);
-                    }}
+                    onClick={handleTrendAnalysis}
+                    disabled={generateReportMutation.isPending}
+                    className="min-w-32"
                   >
-                    Preview Report
-                  </Button>
-                  <Button onClick={handleGenerateReport}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Generate Report
+                    {generateReportMutation.isPending ? (
+                      "Analyzing..."
+                    ) : (
+                      <>
+                        <TrendingUp className="h-4 w-4 mr-2" />
+                        Generate Trend Analysis
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -602,55 +482,86 @@ export default function Reports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="mt-6">
+        <TabsContent value="existing" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Advanced Analytics
+                <BarChart3 className="h-5 w-5" />
+                Generated Reports
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <TrendingUp className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
-                  Advanced Analytics Dashboard
-                </p>
-                <div className="mt-4 space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="mr-2"
-                    onClick={() => {
-                      console.log('Opening predictive analytics...');
-                      alert('Predictive Analytics:\n\n' +
-                        '• Sample volume forecasting based on historical trends\n' +
-                        '• Equipment maintenance predictions\n' +
-                        '• Peak workload analysis\n' +
-                        '• Quality control trend analysis\n\n' +
-                        'Advanced analytics features are being prepared for deployment.');
-                    }}
-                  >
-                    Predictive Analytics
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      console.log('Opening trend analysis...');
-                      alert('Trend Analysis Available:\n\n' +
-                        '• Monthly sample volume trends\n' +
-                        '• Department performance comparison\n' +
-                        '• Turnaround time improvements\n' +
-                        '• Seasonal pattern recognition\n\n' +
-                        'Use the Dashboard and Custom Reports tabs to access current trend data.');
-                    }}
-                  >
-                    Trend Analysis
-                  </Button>
+              {loadingReports ? (
+                <div className="text-center text-sm text-gray-500">
+                  Loading reports...
                 </div>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-4">
-                  Machine learning insights and automated reporting coming in next update
-                </p>
-              </div>
+              ) : reports.length === 0 ? (
+                <div className="text-center text-sm text-gray-500">
+                  No reports found
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          Report Title
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          Type
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          Status
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          Generated
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          Format
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {reports.map((report: any) => (
+                        <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {report.title}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm capitalize">
+                            {report.reportType.replace('_', ' ')}
+                          </td>
+                          <td className="py-3 px-4">
+                            {getReportStatusBadge(report.status)}
+                          </td>
+                          <td className="py-3 px-4 text-sm">
+                            {new Date(report.generatedAt).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm uppercase">
+                            {report.format}
+                          </td>
+                          <td className="py-3 px-4">
+                            {report.status === 'completed' ? (
+                              <Button variant="outline" size="sm">
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                            ) : (
+                              <span className="text-sm text-gray-500">
+                                {report.status === 'generating' ? 'Processing...' : 'Unavailable'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

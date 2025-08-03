@@ -7,7 +7,8 @@ import {
   type TestResult, type InsertTestResult, type TestType, type InsertTestType,
   type QualityControl, type InsertQualityControl, type FinancialRecord, type InsertFinancialRecord,
   type LabSettings, type InsertLabSettings, type SystemSettings, type InsertSystemSettings,
-  type ActionLog, type InsertActionLog, type Report, type InsertReport
+  type ActionLog, type InsertActionLog, type Report, type InsertReport,
+  type Worklist, type InsertWorklist, type OutboundSample, type InsertOutboundSample
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, like, count, sum, avg, gte } from "drizzle-orm";
@@ -86,6 +87,17 @@ export interface IStorage {
   updateReportStatus(id: string, status: string, filePath?: string, fileSize?: number): Promise<void>;
 
     getUserById(id: string): Promise<User | undefined>;
+  
+  // Worklist operations
+  getWorklists(limit?: number): Promise<Worklist[]>;
+  createWorklist(worklist: InsertWorklist): Promise<Worklist>;
+  
+  // Outbound sample operations
+  getOutboundSamples(limit?: number): Promise<OutboundSample[]>;
+  createOutboundSample(outboundSample: InsertOutboundSample): Promise<OutboundSample>;
+  
+  // Test results operations
+  saveTestResults(results: any): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {

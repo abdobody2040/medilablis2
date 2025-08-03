@@ -1,155 +1,395 @@
+
 import { queryClient } from './queryClient';
 
-// Generic API request function
-export async function apiRequest(url: string, options: RequestInit = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `Request failed: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-// Action logging function - logs all button actions to database
-export async function logAction(
-  actionType: string,
-  actionCategory: string,
-  actionData: any,
-  description: string,
-  userId: string = 'current-user' // In real app, get from auth context
-) {
-  try {
-    await apiRequest('/api/actions/log', {
+// Auth API
+export const authApi = {
+  async login(credentials: { username: string; password: string }) {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({
-        userId,
-        actionType,
-        actionCategory,
-        actionData,
-        description,
-        success: true,
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
     });
-    console.log(`Action logged: ${actionType}`, actionData);
-  } catch (error) {
-    console.error('Failed to log action:', error);
-  }
-}
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
+    }
+    
+    return response.json();
+  },
+
+  async register(userData: any) {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Registration failed');
+    }
+    
+    return response.json();
+  },
+
+  async validateUser(userId: string) {
+    const response = await fetch('/api/auth/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Validation failed');
+    }
+    
+    return response.json();
+  },
+};
+
+// Dashboard API
+export const dashboardApi = {
+  async getStats() {
+    const response = await fetch('/api/dashboard/stats');
+    if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+    return response.json();
+  },
+
+  async getRecentSamples(limit = 10) {
+    const response = await fetch(`/api/dashboard/recent-samples?limit=${limit}`);
+    if (!response.ok) throw new Error('Failed to fetch recent samples');
+    return response.json();
+  },
+};
+
+// Patients API
+export const patientsApi = {
+  async getPatients(params: { search?: string; page?: number; limit?: number } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.search) searchParams.set('search', params.search);
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    
+    const response = await fetch(`/api/patients?${searchParams}`);
+    if (!response.ok) throw new Error('Failed to fetch patients');
+    return response.json();
+  },
+
+  async getPatient(id: string) {
+    const response = await fetch(`/api/patients/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch patient');
+    return response.json();
+  },
+
+  async createPatient(patientData: any) {
+    const response = await fetch('/api/patients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patientData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create patient');
+    }
+    
+    return response.json();
+  },
+};
+
+// Samples API
+export const samplesApi = {
+  async getSamples(params: { status?: string; page?: number; limit?: number; sortBy?: string; sortOrder?: string } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set('status', params.status);
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+    if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
+    
+    const response = await fetch(`/api/samples?${searchParams}`);
+    if (!response.ok) throw new Error('Failed to fetch samples');
+    return response.json();
+  },
+
+  async getSample(id: string) {
+    const response = await fetch(`/api/samples/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch sample');
+    return response.json();
+  },
+
+  async createSample(sampleData: any) {
+    const response = await fetch('/api/samples', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sampleData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create sample');
+    }
+    
+    return response.json();
+  },
+
+  async updateSample(id: string, updates: any) {
+    const response = await fetch(`/api/samples/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update sample');
+    }
+    
+    return response.json();
+  },
+};
+
+// Results API
+export const resultsApi = {
+  async saveResults(resultData: any) {
+    const response = await fetch('/api/results/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(resultData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save results');
+    }
+    
+    return response.json();
+  },
+};
 
 // Quality Control API
 export const qualityControlApi = {
-  async submit(qcData: any) {
-    const result = await apiRequest('/api/quality-control', {
+  async createQC(qcData: any) {
+    const response = await fetch('/api/quality-control', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(qcData),
     });
     
-    // Invalidate QC queries
-    queryClient.invalidateQueries({ queryKey: ['quality-controls'] });
-    return result;
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create QC entry');
+    }
+    
+    return response.json();
+  },
 };
 
 // Financial API
 export const financialApi = {
   async createInvoice(invoiceData: any) {
-    const result = await apiRequest('/api/financial/invoice', {
+    const response = await fetch('/api/financial/invoice', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(invoiceData),
     });
     
-    // Invalidate financial queries
-    queryClient.invalidateQueries({ queryKey: ['financial-records'] });
-    return result;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create invoice');
+    }
+    
+    return response.json();
   },
 
-  async processPayment(invoiceNumber: string, status: string, userId?: string) {
-    const result = await apiRequest('/api/financial/payment', {
+  async processPayment(paymentData: any) {
+    const response = await fetch('/api/financial/payment', {
       method: 'POST',
-      body: JSON.stringify({ invoiceNumber, status, userId }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentData),
     });
     
-    // Invalidate financial queries
-    queryClient.invalidateQueries({ queryKey: ['financial-records'] });
-    return result;
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to process payment');
+    }
+    
+    return response.json();
+  },
 };
 
 // Settings API
 export const settingsApi = {
   async getLabSettings() {
-    return apiRequest('/api/settings/lab');
+    const response = await fetch('/api/settings/lab');
+    if (!response.ok) throw new Error('Failed to fetch lab settings');
+    return response.json();
   },
 
-  async saveLabSettings(settings: any) {
-    const result = await apiRequest('/api/settings/lab', {
+  async saveLabSettings(settingsData: any) {
+    const response = await fetch('/api/settings/lab', {
       method: 'POST',
-      body: JSON.stringify(settings),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settingsData),
     });
     
-    // Invalidate settings queries
-    queryClient.invalidateQueries({ queryKey: ['lab-settings'] });
-    return result;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save lab settings');
+    }
+    
+    return response.json();
   },
 
-  async saveSystemSetting(setting: any) {
-    const result = await apiRequest('/api/settings/system', {
+  async saveSystemSetting(settingData: any) {
+    const response = await fetch('/api/settings/system', {
       method: 'POST',
-      body: JSON.stringify(setting),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settingData),
     });
     
-    // Invalidate settings queries
-    queryClient.invalidateQueries({ queryKey: ['system-settings'] });
-    return result;
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save system setting');
+    }
+    
+    return response.json();
+  },
 };
 
 // Reports API
 export const reportsApi = {
-  async generate(reportData: any) {
-    const result = await apiRequest('/api/reports/generate', {
+  async generateReport(reportData: any) {
+    const response = await fetch('/api/reports/generate', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reportData),
     });
     
-    // Invalidate reports queries
-    queryClient.invalidateQueries({ queryKey: ['reports'] });
-    return result;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate report');
+    }
+    
+    return response.json();
   },
 
-  async getReports(limit?: number) {
-    const url = limit ? `/api/reports?limit=${limit}` : '/api/reports';
-    return apiRequest(url);
-  }
+  async getReports(limit = 50) {
+    const response = await fetch(`/api/reports?limit=${limit}`);
+    if (!response.ok) throw new Error('Failed to fetch reports');
+    return response.json();
+  },
 };
 
-// User Management API
-export const userApi = {
-  async createUser(userData: any) {
-    const result = await apiRequest('/api/users', {
+// Worklists API
+export const worklistsApi = {
+  async getWorklists(limit = 50) {
+    const response = await fetch(`/api/worklists?limit=${limit}`);
+    if (!response.ok) throw new Error('Failed to fetch worklists');
+    return response.json();
+  },
+
+  async createWorklist(worklistData: any) {
+    const response = await fetch('/api/worklists', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(worklistData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create worklist');
+    }
+    
+    return response.json();
+  },
+};
+
+// Outbound API
+export const outboundApi = {
+  async getOutboundSamples(limit = 50) {
+    const response = await fetch(`/api/outbound?limit=${limit}`);
+    if (!response.ok) throw new Error('Failed to fetch outbound samples');
+    return response.json();
+  },
+
+  async createOutboundSample(outboundData: any) {
+    const response = await fetch('/api/outbound', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(outboundData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create outbound sample');
+    }
+    
+    return response.json();
+  },
+};
+
+// Users API
+export const usersApi = {
+  async getUsers(params: { page?: number; limit?: number; role?: string; search?: string } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    if (params.role) searchParams.set('role', params.role);
+    if (params.search) searchParams.set('search', params.search);
+    
+    const response = await fetch(`/api/users?${searchParams}`);
+    if (!response.ok) throw new Error('Failed to fetch users');
+    return response.json();
+  },
+
+  async createUser(userData: any) {
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
     
-    // Invalidate users queries
-    queryClient.invalidateQueries({ queryKey: ['users'] });
-    return result;
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create user');
+    }
+    
+    return response.json();
+  },
 };
 
-// Action logs API
+// Test Types API
+export const testTypesApi = {
+  async getTestTypes() {
+    const response = await fetch('/api/test-types');
+    if (!response.ok) throw new Error('Failed to fetch test types');
+    return response.json();
+  },
+};
+
+// Action Logs API
 export const actionLogsApi = {
-  async getLogs(limit?: number) {
-    const url = limit ? `/api/action-logs?limit=${limit}` : '/api/action-logs';
-    return apiRequest(url);
-  }
-};
+  async logAction(actionData: any) {
+    const response = await fetch('/api/actions/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(actionData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to log action');
+    }
+    
+    return response.json();
+  },
 
+  async getActionLogs(limit = 100) {
+    const response = await fetch(`/api/action-logs?limit=${limit}`);
+    if (!response.ok) throw new Error('Failed to fetch action logs');
+    return response.json();
+  },
+};
