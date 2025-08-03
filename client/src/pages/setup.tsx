@@ -114,13 +114,18 @@ export default function Setup() {
     }
     
     try {
-      // Generate a valid UUID for updatedBy - in a real app, get from auth context
-      const updatedBy = crypto.randomUUID();
+      // Get the current user from auth context
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (!currentUser.id) {
+        alert('Please log in to save settings');
+        return;
+      }
       
       // Prepare settings data for database
       const settingsData = {
         ...labSettings,
-        updatedBy
+        updatedBy: currentUser.id
       };
       
       // Save to database using API
