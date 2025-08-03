@@ -1,35 +1,43 @@
+
 import { QueryClient } from '@tanstack/react-query';
+
+// Create a default query function for all API requests
+const defaultQueryFn = async ({ queryKey }: { queryKey: any[] }) => {
+  const [url] = queryKey;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response.json();
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      queryFn: defaultQueryFn,
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
-  // Add default queryFn to handle the console errors
-  queryCache: undefined,
-  mutationCache: undefined,
 });
 
-// Default query function for React Query
-queryClient.setDefaultOptions({
-  queries: {
-    queryFn: async ({ queryKey, signal }) => {
-      const url = Array.isArray(queryKey) ? queryKey[0] : queryKey;
-
-      if (typeof url !== 'string') {
-        throw new Error('Query key must be a string or array with string as first element');
-      }
-
-      const response = await fetch(url, { signal });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return response.json();
+// Generic API request helper
+export const apiRequest = async (url: string, options?: RequestInit) => {
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
     },
-  },
-});
+    ...options,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
