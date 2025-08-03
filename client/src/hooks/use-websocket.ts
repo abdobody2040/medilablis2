@@ -1,61 +1,49 @@
-import { useEffect, useRef, useState } from 'react';
-import { useToast } from './use-toast';
 
-interface WebSocketMessage {
-  type: string;
-  data: any;
+import { useEffect, useRef, useState } from 'react';
+
+interface UseWebSocketOptions {
+  onMessage?: (data: any) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  reconnectInterval?: number;
+  maxReconnectAttempts?: number;
 }
 
-export function useWebSocket() {
+export const useWebSocket = (options: UseWebSocketOptions = {}) => {
+  const {
+    onMessage,
+    onConnect,
+    onDisconnect,
+    reconnectInterval = 3000,
+    maxReconnectAttempts = 5,
+  } = options;
+
   const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
+  const reconnectAttemptsRef = useRef(0);
 
   const connect = () => {
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-
+      
+      setConnectionStatus('connecting');
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
-        // Clear any existing reconnect timeout
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-          reconnectTimeoutRef.current = null;
-        }
+        setConnectionStatus('connected');
+        reconnectAttemptsRef.current = 0;
+        onConnect?.();
       };
 
       wsRef.current.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
-          setLastMessage(message);
-
-          // Handle different message types
-          switch (message.type) {
-            case 'patient_registered':
-              toast({
-                title: "New Patient Registered",
-                description: `Patient ${message.data.firstName} ${message.data.lastName} has been registered.`,
-              });
-              break;
-            case 'sample_created':
-              toast({
-                title: "New Sample",
-                description: `Sample ${message.data.sampleId} has been created.`,
-              });
-              break;
-            case 'sample_updated':
-              toast({
-                title: "Sample Updated",
-                description: `Sample ${message.data.sampleId} status changed to ${message.data.status}.`,
-              });
-              break;
-          }
+          const data = JSON.parse(event.data);
+          onMessage?.(data);
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
         }
@@ -64,23 +52,26 @@ export function useWebSocket() {
       wsRef.current.onclose = (event) => {
         console.log('WebSocket disconnected', event.code, event.reason);
         setIsConnected(false);
+        setConnectionStatus('disconnected');
+        onDisconnect?.();
 
-        // Only attempt to reconnect if the connection wasn't closed intentionally
-        if (event.code !== 1000) {
+        // Attempt to reconnect if not manually closed
+        if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+          reconnectAttemptsRef.current++;
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting to reconnect WebSocket...');
+            console.log(`Attempting to reconnect... (${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
             connect();
-          }, 3000);
+          }, reconnectInterval);
         }
       };
 
       wsRef.current.onerror = (error) => {
         console.log('WebSocket error:', error);
-        setIsConnected(false);
+        setConnectionStatus('error');
       };
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
-      setIsConnected(false);
+      setConnectionStatus('error');
     }
   };
 
@@ -89,12 +80,22 @@ export function useWebSocket() {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-
+    
     if (wsRef.current) {
-      wsRef.current.close(1000, 'Component unmounting');
+      wsRef.current.close(1000, 'Manual disconnect');
       wsRef.current = null;
     }
+    
     setIsConnected(false);
+    setConnectionStatus('disconnected');
+  };
+
+  const sendMessage = (data: any) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(data));
+      return true;
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -107,8 +108,9 @@ export function useWebSocket() {
 
   return {
     isConnected,
-    lastMessage,
+    connectionStatus,
+    sendMessage,
     connect,
     disconnect,
   };
-}
+};

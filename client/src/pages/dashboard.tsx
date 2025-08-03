@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/lib/api';
 import { KPICards } from '@/components/dashboard/kpi-cards';
-import { Charts } from '@/components/dashboard/charts';
+import Charts from '@/components/dashboard/charts';
 import { RecentSamples } from '@/components/dashboard/recent-samples';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
