@@ -41,3 +41,5 @@ export const apiRequest = async (url: string, options?: RequestInit) => {
 
   return response.json();
 };
+
+export { defaultQueryFn };

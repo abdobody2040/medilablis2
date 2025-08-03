@@ -72,6 +72,9 @@ export function RecentSamples() {
     );
   }
 
+  // Ensure samples is not undefined before proceeding
+  const displaySamples = samples || [];
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -82,7 +85,7 @@ export function RecentSamples() {
           </Button>
         </Link>
       </CardHeader>
-      
+
       <CardContent className="p-0">
         <div className="overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -106,7 +109,8 @@ export function RecentSamples() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-              {samples?.map((sample) => (
+              {displaySamples && displaySamples.length > 0 ? (
+                  displaySamples.slice(0, 10).map((sample) => (
                 <tr key={sample.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
                     <Link href={`/samples/${sample.id}`}>
@@ -134,11 +138,18 @@ export function RecentSamples() {
                     {formatDistanceToNow(new Date(sample.receivedDateTime), { addSuffix: true })}
                   </td>
                 </tr>
-              ))}
+              ))
+              ) : (
+                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white" colSpan={5}>
+                    No recent samples found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
-          
-          {samples && samples.length === 0 && (
+
+          {displaySamples && displaySamples.length === 0 && (
             <div className="px-6 py-8 text-center">
               <p className="text-gray-500 dark:text-gray-400">No recent samples found</p>
             </div>

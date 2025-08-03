@@ -14,7 +14,7 @@ export default function Dashboard() {
     isLoading: statsLoading, 
     error: statsError 
   } = useQuery({
-    queryKey: ['/api/dashboard/stats'],
+    queryKey: ['dashboard-stats'],
     queryFn: () => dashboardApi.getStats(),
   });
 
@@ -23,7 +23,7 @@ export default function Dashboard() {
     isLoading: samplesLoading, 
     error: samplesError 
   } = useQuery({
-    queryKey: ['/api/dashboard/recent-samples'],
+    queryKey: ['dashboard-recent-samples'],
     queryFn: () => dashboardApi.getRecentSamples(10),
   });
 
