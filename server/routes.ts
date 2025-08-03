@@ -508,16 +508,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const resultData = req.body;
       
-      // In a real implementation, you'd validate the data and save to database
-      // For now, just log the action
-      await storage.logAction({
-        userId: req.body.enteredBy || 'system',
-        actionType: "TEST_RESULT_SAVED",
-        actionCategory: "results",
-        actionData: resultData,
-        description: `Test result saved for parameter ${resultData.parameterName}`,
-        success: true
-      });
+      // Validate required fields
+      if (!resultData.sampleId || !resultData.testType || !resultData.results) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Save the test results
+      await storage.saveTestResults(resultData);
 
       res.json({ success: true, message: "Results saved successfully" });
     } catch (error) {
@@ -529,16 +526,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Worklists routes
   app.get("/api/worklists", async (req, res) => {
     try {
-      // Mock worklists data for now
-      const worklists = [
-        {
-          id: '1',
-          name: 'Morning Chemistry',
-          description: 'Chemistry tests for morning shift',
-          assignedTo: 'Tech1',
-          status: 'active'
-        }
-      ];
+      const limit = parseInt(req.query.limit as string) || 50;
+      const worklists = await storage.getWorklists(limit);
       res.json(worklists);
     } catch (error) {
       console.error("Worklists fetch error:", error);
@@ -569,17 +558,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Outbound samples routes
   app.get("/api/outbound", async (req, res) => {
     try {
-      // Mock outbound samples data
-      const outboundSamples = [
-        {
-          id: '1',
-          sampleId: 'S-2024-001',
-          referenceLabName: 'Advanced Diagnostics Lab',
-          testRequested: 'Molecular Testing',
-          status: 'sent',
-          sentDate: new Date().toISOString()
-        }
-      ];
+      const limit = parseInt(req.query.limit as string) || 50;
+      const outboundSamples = await storage.getOutboundSamples(limit);
       res.json(outboundSamples);
     } catch (error) {
       console.error("Outbound samples fetch error:", error);

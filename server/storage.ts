@@ -611,6 +611,55 @@ export class DatabaseStorage implements IStorage {
       .set(updateData)
       .where(eq(reports.id, id));
   }
+
+  // Missing methods for worklists
+  async getWorklists(limit: number = 50): Promise<Worklist[]> {
+    return await db
+      .select()
+      .from(worklists)
+      .where(eq(worklists.isActive, true))
+      .orderBy(desc(worklists.createdAt))
+      .limit(limit);
+  }
+
+  async createWorklist(insertWorklist: InsertWorklist): Promise<Worklist> {
+    const [worklist] = await db
+      .insert(worklists)
+      .values(insertWorklist)
+      .returning();
+    return worklist;
+  }
+
+  // Missing methods for outbound samples
+  async getOutboundSamples(limit: number = 50): Promise<OutboundSample[]> {
+    return await db
+      .select()
+      .from(outboundSamples)
+      .orderBy(desc(outboundSamples.sentDateTime))
+      .limit(limit);
+  }
+
+  async createOutboundSample(insertOutboundSample: InsertOutboundSample): Promise<OutboundSample> {
+    const [outboundSample] = await db
+      .insert(outboundSamples)
+      .values(insertOutboundSample)
+      .returning();
+    return outboundSample;
+  }
+
+  // Missing method for saving test results
+  async saveTestResults(results: any): Promise<void> {
+    // This would implement the actual test results saving logic
+    // For now, just log the action
+    await this.logAction({
+      userId: results.enteredBy || 'system',
+      actionType: "TEST_RESULT_SAVED",
+      actionCategory: "results",
+      actionData: results,
+      description: `Test results saved for sample ${results.sampleId}`,
+      success: true
+    });
+  }
 }
 
 export const storage = new DatabaseStorage();

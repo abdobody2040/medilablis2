@@ -21,7 +21,7 @@ interface ResultParameter {
 export function ResultsEntry() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [form, setForm] = useState({
     sampleId: '',
     testType: '',
@@ -48,12 +48,12 @@ export function ResultsEntry() {
         referenceRange: currentResult.referenceRange,
         flag: currentResult.flag,
       };
-      
+
       setForm(prev => ({
         ...prev,
         results: [...prev.results, newResult]
       }));
-      
+
       setCurrentResult({
         parameter: '',
         value: '',
@@ -91,17 +91,53 @@ export function ResultsEntry() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate that all required fields are filled
+    if (!form.sampleId || !form.testType || form.results.length === 0) {
+      alert('Please fill in all required fields and add at least one result.');
+      return;
+    }
+
+    // Validate that all results have values
+    const incompleteResults = form.results.some(result => !result.value.trim());
+    if (incompleteResults) {
+      alert('Please enter values for all test parameters.');
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Results saved successfully",
-        description: `Results for sample ${form.sampleId} have been recorded.`,
+      // Get current user for enteredBy field
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+      const resultData = {
+        sampleId: form.sampleId,
+        testType: form.testType,
+        results: form.results,
+        comments: form.comments,
+        enteredBy: currentUser.id || 'unknown',
+        technician: form.technician,
+      };
+
+      const response = await fetch('/api/results/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(resultData),
       });
-      
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to save results' }));
+        throw new Error(errorData.error || 'Failed to save results');
+      }
+
+      const result = await response.json();
+      console.log('Results submitted successfully:', result);
+      alert(`Results saved successfully for sample ${form.sampleId}!`);
+
       // Reset form
       setForm({
         sampleId: '',
@@ -111,11 +147,8 @@ export function ResultsEntry() {
         technician: '',
       });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to save results",
-        description: "Please try again or contact support.",
-      });
+      console.error('Failed to save results:', error);
+      alert(`Failed to save results: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -145,7 +178,7 @@ export function ResultsEntry() {
                 disabled={isSubmitting}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="testType">Test Type *</Label>
               <Select value={form.testType} onValueChange={(value) => setForm(prev => ({ ...prev, testType: value }))}>
@@ -169,7 +202,7 @@ export function ResultsEntry() {
           {/* Result Entry */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Test Parameters</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
               <div>
                 <Label htmlFor="parameter">Parameter</Label>
@@ -181,7 +214,7 @@ export function ResultsEntry() {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="value">Value</Label>
                 <Input
@@ -193,7 +226,7 @@ export function ResultsEntry() {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="unit">Unit</Label>
                 <Input
@@ -204,7 +237,7 @@ export function ResultsEntry() {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="referenceRange">Reference Range</Label>
                 <Input
@@ -215,7 +248,7 @@ export function ResultsEntry() {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="flag">Flag</Label>
                 <Select value={currentResult.flag} onValueChange={(value) => setCurrentResult(prev => ({ ...prev, flag: value }))}>
@@ -230,7 +263,7 @@ export function ResultsEntry() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="md:col-span-5 flex justify-end">
                 <Button type="button" onClick={addResult} disabled={isSubmitting}>
                   Add Parameter

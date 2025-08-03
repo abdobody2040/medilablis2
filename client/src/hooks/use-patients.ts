@@ -13,7 +13,7 @@ export function usePatients(params: PatientsQueryParams = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { page = 1, limit = 50, search } = params;
-  
+
   const queryParams = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
@@ -34,7 +34,7 @@ export function usePatients(params: PatientsQueryParams = {}) {
     queryFn: async ({ queryKey }) => {
       const [, , searchTerm] = queryKey;
       if (!searchTerm) return [];
-      
+
       const response = await fetch(`/api/patients?search=${searchTerm}`, { 
         credentials: 'include' 
       });
@@ -46,21 +46,32 @@ export function usePatients(params: PatientsQueryParams = {}) {
 
   const createPatientMutation = useMutation({
     mutationFn: async (patientData: any) => {
-      const response = await apiRequest('POST', '/api/patients', patientData);
-      return response.json();
+      try {
+        const response = await apiRequest('POST', '/api/patients', patientData);
+        return await response.json();
+      } catch (error) {
+        console.error('Patient creation API error:', error);
+        throw error;
+      }
     },
     onSuccess: (newPatient) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/patients'] });
-      toast({
-        title: "Patient registered",
-        description: `${newPatient.firstName} ${newPatient.lastName} has been registered successfully.`,
-      });
+      try {
+        queryClient.invalidateQueries({ queryKey: ['/api/patients'] });
+        toast({
+          title: "Patient registered",
+          description: `${newPatient.firstName} ${newPatient.lastName} has been registered successfully.`,
+        });
+      } catch (error) {
+        console.error('Patient creation success handler error:', error);
+      }
     },
     onError: (error: any) => {
+      console.error('Patient creation failed:', error);
+      const errorMessage = error?.message || 'Failed to register patient. Please try again.';
       toast({
         variant: "destructive",
         title: "Failed to register patient",
-        description: error.message,
+        description: errorMessage,
       });
     },
   });
