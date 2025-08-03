@@ -86,3 +86,5 @@ export function Charts({ stats }: ChartsProps) {
     </Card>
   );
 }
+
+export default Charts;
