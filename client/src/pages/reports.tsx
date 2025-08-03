@@ -53,22 +53,22 @@ export default function Reports() {
 
   const handleGenerateReport = async () => {
     console.log('Generating report with filters:', reportFilters);
-    
+
     if (!reportFilters.reportType) {
       alert('Please select a report type');
       return;
     }
-    
+
     if (!reportFilters.dateFrom || !reportFilters.dateTo) {
       alert('Please select date range');
       return;
     }
-    
+
     try {
       // Generate report content based on type
       let reportContent = '';
       const reportDate = new Date().toLocaleDateString();
-      
+
       switch (reportFilters.reportType) {
         case 'sample_volume':
           reportContent = `Sample Volume Report - ${reportDate}\n` +
@@ -92,7 +92,7 @@ export default function Reports() {
             `Department: ${reportFilters.department || 'All'}\n\n` +
             `Report generated successfully with current lab data.`;
       }
-      
+
       // Create report data for database
       const reportData = {
         reportType: reportFilters.reportType,
@@ -102,13 +102,13 @@ export default function Reports() {
         format: reportFilters.format,
         status: 'completed'
       };
-      
+
       // Save report to database
       const { reportsApi } = await import('@/lib/api');
       const savedReport = await reportsApi.generate(reportData);
-      
+
       console.log('Report Saved to Database:', savedReport);
-      
+
       // Create and download file
       const fileExtension = reportFilters.format === 'excel' ? 'csv' : reportFilters.format;
       const mimeType = reportFilters.format === 'pdf' ? 'text/plain' : 'text/csv';
@@ -122,14 +122,14 @@ export default function Reports() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       alert(`Report Generated & Saved to Database!\n\n` +
         `Report Type: ${reportFilters.reportType.replace('_', ' ')}\n` +
         `Database ID: ${savedReport.id}\n` +
         `Date Range: ${reportFilters.dateFrom} to ${reportFilters.dateTo}\n` +
         `Format: ${reportFilters.format}\n\n` +
         `Report has been permanently saved to the database and downloaded.`);
-      
+
     } catch (error) {
       console.error('Report generation error:', error);
       alert(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -138,7 +138,7 @@ export default function Reports() {
 
   const handleExport = (format: string) => {
     console.log(`Exporting in ${format} format`);
-    
+
     // Prepare comprehensive data export
     const exportData = {
       sampleVolume: sampleVolumeData,
@@ -148,11 +148,11 @@ export default function Reports() {
       exportDate: new Date().toLocaleDateString(),
       generatedBy: 'Laboratory Information System'
     };
-    
+
     let content = '';
     let fileName = '';
     let mimeType = '';
-    
+
     if (format === 'excel' || format === 'csv') {
       // Create CSV format
       content = `Laboratory Data Export - ${exportData.exportDate}\n\n` +
@@ -168,7 +168,7 @@ export default function Reports() {
         `\n\nQuality Metrics:\n` +
         `Metric,Value,Target,Unit\n` +
         exportData.qualityMetrics.map(item => `${item.metric},${item.value},${item.target},${item.unit}`).join('\n');
-      
+
       fileName = `lab-data-export-${new Date().toISOString().split('T')[0]}.csv`;
       mimeType = 'text/csv';
     } else {
@@ -177,7 +177,7 @@ export default function Reports() {
       fileName = `lab-data-export-${new Date().toISOString().split('T')[0]}.json`;
       mimeType = 'application/json';
     }
-    
+
     // Create and download file
     const blob = new Blob([content], { type: mimeType });
     const url = window.URL.createObjectURL(blob);
@@ -189,7 +189,7 @@ export default function Reports() {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    
+
     alert(`Lab data exported successfully in ${format.toUpperCase()} format!`);
   };
 
@@ -504,7 +504,7 @@ export default function Reports() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="department">Department</Label>
                     <Select value={reportFilters.department} onValueChange={(value) => setReportFilters(prev => ({ ...prev, department: value }))}>
@@ -534,7 +534,7 @@ export default function Reports() {
                       onChange={(e) => setReportFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="dateTo">To Date *</Label>
                     <Input
@@ -570,7 +570,7 @@ export default function Reports() {
                         alert('Please select a report type to preview');
                         return;
                       }
-                      
+
                       const previewData = {
                         type: reportFilters.reportType,
                         dateRange: `${reportFilters.dateFrom} to ${reportFilters.dateTo}`,
@@ -579,7 +579,7 @@ export default function Reports() {
                         estimatedSize: '2.3 MB',
                         estimatedPages: '15-20 pages'
                       };
-                      
+
                       alert(`Report Preview:\n\n` +
                         `Type: ${previewData.type.replace('_', ' ').toUpperCase()}\n` +
                         `Date Range: ${previewData.dateRange}\n` +

@@ -21,7 +21,7 @@ interface Medication {
 export function PatientRegistration() {
   const { createPatient, isCreating } = usePatients();
   const { toast } = useToast();
-  
+
   const [form, setForm] = useState({
     patientId: '',
     firstName: '',
@@ -126,13 +126,13 @@ export function PatientRegistration() {
     setMedications([{ name: '', type: '', dose: '', duration: '' }]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!form.patientId) {
       setForm(prev => ({ ...prev, patientId: generatePatientId() }));
     }
-    
+
     const patientData = {
       ...form,
       dateOfBirth: new Date(form.dateOfBirth),
@@ -175,7 +175,7 @@ export function PatientRegistration() {
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Basic Information</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="patientId">Patient ID</Label>
@@ -187,7 +187,7 @@ export function PatientRegistration() {
                   disabled={isCreating}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="nationalId">National ID</Label>
                 <Input
@@ -223,7 +223,7 @@ export function PatientRegistration() {
                   disabled={isCreating}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="lastName">Last Name *</Label>
                 <Input
@@ -249,7 +249,7 @@ export function PatientRegistration() {
                   disabled={isCreating}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="gender">Gender *</Label>
                 <Select value={form.gender} onValueChange={(value) => setForm(prev => ({ ...prev, gender: value }))}>
@@ -283,7 +283,7 @@ export function PatientRegistration() {
           {/* Contact Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Contact Information</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="phoneNumber">Mobile</Label>
@@ -296,7 +296,7 @@ export function PatientRegistration() {
                   disabled={isCreating}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="landline">Landline</Label>
                 <Input
@@ -351,7 +351,7 @@ export function PatientRegistration() {
           {/* Pre-test Questionnaire */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Pre-test Questionnaire</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="fastingHours">Number of fasting hours</Label>
@@ -532,7 +532,7 @@ export function PatientRegistration() {
           {form.gender === 'female' && (
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Female-specific Questions</h3>
-              
+
               <div>
                 <Label htmlFor="lastMenstrualPeriod">Date of first day of last period</Label>
                 <Input
@@ -561,7 +561,7 @@ export function PatientRegistration() {
           {/* Required Tests */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Required Tests</h3>
-            
+
             <div>
               <Label htmlFor="requiredTests">Required tests</Label>
               <Textarea
@@ -670,7 +670,7 @@ export function PatientRegistration() {
           {/* Iron and Vitamins */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Iron and Vitamins</h3>
-            
+
             <div className="flex items-center justify-between">
               <Label htmlFor="isOnIronVitamins">Are you taking iron or vitamins?</Label>
               <Switch

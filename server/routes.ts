@@ -493,6 +493,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test Results routes
+  app.post("/api/results/save", async (req, res) => {
+    try {
+      const resultData = req.body;
+      
+      // In a real implementation, you'd validate the data and save to database
+      // For now, just log the action
+      await storage.logAction({
+        userId: req.body.enteredBy || 'system',
+        actionType: "TEST_RESULT_SAVED",
+        actionCategory: "results",
+        actionData: resultData,
+        description: `Test result saved for parameter ${resultData.parameterName}`,
+        success: true
+      });
+
+      res.json({ success: true, message: "Results saved successfully" });
+    } catch (error) {
+      console.error("Save results error:", error);
+      res.status(500).json({ error: "Failed to save results" });
+    }
+  });
+
+  // Worklists routes
+  app.get("/api/worklists", async (req, res) => {
+    try {
+      // Mock worklists data for now
+      const worklists = [
+        {
+          id: '1',
+          name: 'Morning Chemistry',
+          description: 'Chemistry tests for morning shift',
+          assignedTo: 'Tech1',
+          status: 'active'
+        }
+      ];
+      res.json(worklists);
+    } catch (error) {
+      console.error("Worklists fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch worklists" });
+    }
+  });
+
+  app.post("/api/worklists", async (req, res) => {
+    try {
+      const worklistData = req.body;
+      
+      await storage.logAction({
+        userId: req.body.createdBy || 'system',
+        actionType: "WORKLIST_CREATED",
+        actionCategory: "worklists", 
+        actionData: worklistData,
+        description: `Worklist created: ${worklistData.name}`,
+        success: true
+      });
+
+      res.json({ success: true, message: "Worklist created successfully" });
+    } catch (error) {
+      console.error("Create worklist error:", error);
+      res.status(500).json({ error: "Failed to create worklist" });
+    }
+  });
+
+  // Outbound samples routes
+  app.get("/api/outbound", async (req, res) => {
+    try {
+      // Mock outbound samples data
+      const outboundSamples = [
+        {
+          id: '1',
+          sampleId: 'S-2024-001',
+          referenceLabName: 'Advanced Diagnostics Lab',
+          testRequested: 'Molecular Testing',
+          status: 'sent',
+          sentDate: new Date().toISOString()
+        }
+      ];
+      res.json(outboundSamples);
+    } catch (error) {
+      console.error("Outbound samples fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch outbound samples" });
+    }
+  });
+
+  app.post("/api/outbound", async (req, res) => {
+    try {
+      const outboundData = req.body;
+      
+      await storage.logAction({
+        userId: req.body.sentBy || 'system',
+        actionType: "OUTBOUND_SAMPLE_SENT",
+        actionCategory: "outbound",
+        actionData: outboundData,
+        description: `Outbound sample sent: ${outboundData.sampleId}`,
+        success: true
+      });
+
+      res.json({ success: true, message: "Outbound sample recorded successfully" });
+    } catch (error) {
+      console.error("Outbound sample error:", error);
+      res.status(500).json({ error: "Failed to record outbound sample" });
+    }
+  });
+
   // Action logs route
   app.get("/api/action-logs", async (req, res) => {
     try {

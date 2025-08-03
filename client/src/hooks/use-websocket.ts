@@ -12,7 +12,7 @@ export function useWebSocket() {
     const connectWebSocket = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
+
       try {
         ws.current = new WebSocket(wsUrl);
 
@@ -24,7 +24,7 @@ export function useWebSocket() {
         ws.current.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data);
-            
+
             switch (message.type) {
               case 'sample_created':
                 addSample(message.data);
@@ -34,7 +34,7 @@ export function useWebSocket() {
                   message: `Sample ${message.data.sampleId} has been created`,
                 });
                 break;
-                
+
               case 'sample_updated':
                 updateSample(message.data.id, message.data);
                 addNotification({
@@ -43,7 +43,7 @@ export function useWebSocket() {
                   message: `Sample ${message.data.sampleId} has been updated`,
                 });
                 break;
-                
+
               case 'patient_registered':
                 addNotification({
                   type: 'success',
@@ -51,7 +51,7 @@ export function useWebSocket() {
                   message: `${message.data.firstName} ${message.data.lastName} has been registered`,
                 });
                 break;
-                
+
               default:
                 console.log('Unknown message type:', message.type);
             }
@@ -63,7 +63,7 @@ export function useWebSocket() {
         ws.current.onclose = (event) => {
           setIsConnected(false);
           console.log('WebSocket disconnected', event.code, event.reason);
-          
+
           // Attempt to reconnect after 3 seconds if not a normal closure
           if (event.code !== 1000) {
             setTimeout(connectWebSocket, 3000);

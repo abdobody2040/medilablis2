@@ -17,7 +17,7 @@ export function SampleForm() {
   const { searchPatients } = usePatients();
   const { user } = useAuthStore();
   const { toast } = useToast();
-  
+
   const [form, setForm] = useState({
     sampleId: '',
     patientId: '',
@@ -81,51 +81,64 @@ export function SampleForm() {
     setPatientSearch(`${patient.firstName} ${patient.lastName} (${patient.patientId})`);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!form.patientId) {
+    console.log('Creating sample:', form);
+
+    try {
+      // Get current user from localStorage for collectedBy field
+      // const currentUser = JSON.parse(localStorage.getItem('user') || '{}'); // localStorage is not available in server components
+
+      const sampleData = {
+        ...form,
+        collectedBy: user?.id || 'default-user-id', //currentUser.id || 'default-user-id',
+        collectionDateTime: new Date(form.collectionDateTime),
+        receivedDateTime: new Date(),
+        volume: form.volume ? parseFloat(form.volume) : null,
+        status: 'received' as const,
+        priority: form.priority as 'routine' | 'urgent' | 'stat' | 'critical',
+        unit: 'ml', // Default unit
+      };
+
+      createSample(sampleData, {
+        onSuccess: () => {
+          setForm({
+            sampleId: generateSampleId(),
+            patientId: '',
+            sampleType: '',
+            containerType: '',
+            volume: '',
+            unit: 'ml',
+            collectionDateTime: '',
+            priority: 'routine',
+            comments: '',
+            storageLocation: '',
+            barcode: generateBarcode(),
+          });
+          setSelectedPatient(null);
+          setPatientSearch('');
+          toast({
+            title: "Sample created successfully",
+            description: `Sample ${form.sampleId} has been registered.`,
+          });
+        },
+        onError: (error) => {
+          toast({
+            variant: "destructive",
+            title: "Error creating sample",
+            description: error.message || "Failed to create sample",
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error('Sample creation error:', error);
       toast({
         variant: "destructive",
-        title: "Patient required",
-        description: "Please select a patient before creating the sample",
+        title: "Sample creation error",
+        description: error instanceof Error ? error.message : 'Unknown error',
       });
-      return;
     }
-
-    const sampleData = {
-      ...form,
-      collectedBy: user?.id || '',
-      collectionDateTime: new Date(form.collectionDateTime),
-      receivedDateTime: new Date(),
-      volume: form.volume ? parseFloat(form.volume) : null,
-      status: 'received' as const,
-      priority: form.priority as 'routine' | 'urgent' | 'stat' | 'critical',
-    };
-
-    createSample(sampleData, {
-      onSuccess: () => {
-        setForm({
-          sampleId: generateSampleId(),
-          patientId: '',
-          sampleType: '',
-          containerType: '',
-          volume: '',
-          unit: 'ml',
-          collectionDateTime: '',
-          priority: 'routine',
-          comments: '',
-          storageLocation: '',
-          barcode: generateBarcode(),
-        });
-        setSelectedPatient(null);
-        setPatientSearch('');
-        toast({
-          title: "Sample created successfully",
-          description: `Sample ${form.sampleId} has been registered.`,
-        });
-      },
-    });
   };
 
   return (
@@ -150,7 +163,7 @@ export function SampleForm() {
                 disabled={isCreating}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="barcode">Barcode</Label>
               <Input
@@ -178,7 +191,7 @@ export function SampleForm() {
                 <Search className="h-4 w-4" />
               </Button>
             </div>
-            
+
             {searchResults.length > 0 && (
               <div className="border rounded-md max-h-40 overflow-y-auto">
                 {searchResults.map((patient) => (
@@ -215,7 +228,7 @@ export function SampleForm() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="containerType">Container Type</Label>
               <Select value={form.containerType} onValueChange={(value) => setForm(prev => ({ ...prev, containerType: value }))}>
@@ -247,7 +260,7 @@ export function SampleForm() {
                 disabled={isCreating}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="unit">Unit</Label>
               <Select value={form.unit} onValueChange={(value) => setForm(prev => ({ ...prev, unit: value }))}>
@@ -263,7 +276,7 @@ export function SampleForm() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="priority">Priority</Label>
               <Select value={form.priority} onValueChange={(value) => setForm(prev => ({ ...prev, priority: value }))}>
@@ -293,7 +306,7 @@ export function SampleForm() {
                 disabled={isCreating}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="storageLocation">Storage Location</Label>
               <Input

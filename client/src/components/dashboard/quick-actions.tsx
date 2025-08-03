@@ -72,16 +72,19 @@ export function QuickActions() {
       <CardHeader>
         <CardTitle>Quick Actions</CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {actions.map((action) => {
           const Icon = action.icon;
-          
+
           return (
             <Link key={action.title} href={action.href}>
               <Button
                 variant="ghost"
                 className={`w-full ${action.color} border rounded-lg p-4 h-auto justify-start transition-colors`}
+                onClick={(e) => {
+                  console.log(`Navigating to ${action.title}`);
+                }}
               >
                 <div className="flex items-center w-full">
                   <div className="flex-shrink-0">
@@ -119,7 +122,7 @@ export function QuickActions() {
               </div>
             ))}
           </div>
-          
+
           {/* Alert for low reagents */}
           <div 
             className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors"
