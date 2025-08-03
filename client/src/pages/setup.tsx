@@ -125,22 +125,6 @@ export default function Setup() {
         return;
       }
       
-      // Validate that the user exists by checking authentication
-      try {
-        const { authApi } = await import('@/lib/auth');
-        // This will throw an error if the user doesn't exist
-        await fetch('/api/auth/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUser.id })
-        });
-      } catch (authError) {
-        alert('Your user session is invalid. Please log in again.');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return;
-      }
-      
       // Prepare settings data for database
       const settingsData = {
         ...labSettings,
@@ -164,13 +148,17 @@ export default function Setup() {
     } catch (error) {
       console.error('Lab settings save error:', error);
       
-      // Handle foreign key constraint errors specifically
-      if (error instanceof Error && error.message.includes('foreign key constraint')) {
-        alert('User validation failed. Please log out and log back in with valid credentials.');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+      // Handle specific error types
+      if (error instanceof Error) {
+        if (error.message.includes('foreign key constraint') || error.message.includes('user')) {
+          alert('Authentication error. Please log out and log back in with valid credentials.');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        } else {
+          alert(`Failed to save lab settings: ${error.message}`);
+        }
       } else {
-        alert(`Failed to save lab settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert('Failed to save lab settings. Please try again.');
       }
     }
   };
