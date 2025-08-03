@@ -1,7 +1,51 @@
 
 #!/usr/bin/env tsx
 import { DatabaseStorage } from '../server/storage';
-import bcrypt from 'bcryptjs';
+
+async function createTestUsers() {
+  const storage = new DatabaseStorage();
+  
+  const testUsers = [
+    {
+      username: 'admin',
+      email: 'admin@lab.com',
+      password: 'admin123',
+      firstName: 'Admin',
+      lastName: 'User',
+      role: 'admin' as const,
+      isActive: true
+    },
+    {
+      username: 'labmanager',
+      email: 'manager@lab.com',
+      password: 'manager123',
+      firstName: 'Lab',
+      lastName: 'Manager',
+      role: 'lab_manager' as const,
+      isActive: true
+    },
+    {
+      username: 'technician',
+      email: 'tech@lab.com',
+      password: 'tech123',
+      firstName: 'Lab',
+      lastName: 'Technician',
+      role: 'technician' as const,
+      isActive: true
+    },
+    {
+      username: 'doctor',
+      email: 'doctor@lab.com',
+      password: 'doctor123',
+      firstName: 'Dr.',
+      lastName: 'Smith',
+      role: 'doctor' as const,
+      isActive: true
+    },
+    {
+      username: 'receptionist',
+      email: 'reception@lab.com',
+      password: 'reception123',
 
 async function createTestUsers() {
   const storage = new DatabaseStorage();
@@ -91,6 +135,30 @@ async function createTestUsers() {
       role: 'technician' as const,
       isActive: false
     }
+  ];
+
+  console.log('Creating test users...');
+  
+  for (const userData of testUsers) {
+    try {
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        console.log(`User ${userData.username} already exists, skipping...`);
+        continue;
+      }
+      
+      const user = await storage.createUser(userData);
+      console.log(`✓ Created user: ${userData.username} (${userData.role})`);
+    } catch (error) {
+      console.error(`✗ Failed to create user ${userData.username}:`, error);
+    }
+  }
+  
+  console.log('Test users creation completed!');
+  process.exit(0);
+}
+
+createTestUsers().catch(console.error);
   ];
 
   const createdUsers = [];

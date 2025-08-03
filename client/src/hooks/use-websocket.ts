@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 
 interface UseWebSocketOptions {
@@ -28,7 +27,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
+
       setConnectionStatus('connecting');
       wsRef.current = new WebSocket(wsUrl);
 
@@ -80,12 +79,12 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (wsRef.current) {
       wsRef.current.close(1000, 'Manual disconnect');
       wsRef.current = null;
     }
-    
+
     setIsConnected(false);
     setConnectionStatus('disconnected');
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 const mockData = {
@@ -26,6 +26,15 @@ const mockData = {
     { department: 'Immunology', avg: 6, target: 8 },
   ],
 };
+
+interface ChartsProps {
+  stats: {
+    dailySamples: number;
+    resultsReady: number;
+    pendingTests: number;
+    qcPassed: number;
+  } | null;
+}
 
 export function Charts({ stats }: ChartsProps) {
   if (!stats) {
@@ -77,5 +86,3 @@ export function Charts({ stats }: ChartsProps) {
     </Card>
   );
 }
-
-export default Charts;

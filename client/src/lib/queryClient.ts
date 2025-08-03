@@ -4,29 +4,37 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes
-      retry: 3,
-      refetchOnWindowFocus: false,
+      retry: 1,
+      queryFn: async ({ queryKey }) => {
+        const [url] = queryKey as [string];
+        const response = await apiRequest('GET', url);
+        return response.json();
+      },
     },
   },
 });
 
-// API request helper function
-export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const baseUrl = import.meta.env.VITE_API_URL || '/api';
-  const url = `${baseUrl}${endpoint}`;
-
-  const response = await fetch(url, {
+export async function apiRequest(
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  url: string,
+  body?: any
+): Promise<Response> {
+  const config: RequestInit = {
+    method,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
     },
-    ...options,
-  });
+  };
 
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  if (body) {
+    config.body = JSON.stringify(body);
   }
 
-  return response.json();
+  const response = await fetch(url, config);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response;
 }
