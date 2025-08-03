@@ -25,7 +25,7 @@ import {
 
 export function TopNavigation() {
   const { user } = useAuthStore();
-  const { darkMode, toggleSidebar, toggleDarkMode } = useUIStore();
+  const { darkMode, toggleSidebar, toggleDarkMode, notifications, removeNotification, addNotification } = useUIStore();
   const { logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -80,14 +80,100 @@ export function TopNavigation() {
           <span className="sr-only">Toggle theme</span>
         </Button>
 
-        {/* Notifications */}
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          </span>
-          <span className="sr-only">View notifications</span>
+        {/* Test notification button - for demo purposes */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => {
+            const notifications = [
+              { type: 'success' as const, title: 'Test Complete', message: 'Blood test results are ready for John Doe' },
+              { type: 'warning' as const, title: 'QC Alert', message: 'Quality control check needed for Chemistry Analyzer' },
+              { type: 'info' as const, title: 'Sample Received', message: 'New sample registered for patient Emma Smith' },
+              { type: 'error' as const, title: 'Equipment Error', message: 'Hematology analyzer requires maintenance' }
+            ];
+            const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
+            addNotification(randomNotification);
+          }}
+          className="text-xs"
+        >
+          + Test
         </Button>
+
+        {/* Notifications */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="relative">
+              <Bell className="h-5 w-5" />
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative">{notifications.length > 9 ? '9+' : notifications.length}</span>
+                </span>
+              )}
+              <span className="sr-only">View notifications</span>
+            </Button>
+          </DropdownMenuTrigger>
+          
+          <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+            <div className="px-3 py-2 text-sm font-semibold border-b">
+              Notifications ({notifications.length})
+            </div>
+            
+            {notifications.length === 0 ? (
+              <div className="px-3 py-4 text-center text-sm text-gray-500">
+                No new notifications
+              </div>
+            ) : (
+              <>
+                {notifications.map((notification) => (
+                  <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 border-b last:border-b-0">
+                    <div className="flex items-start justify-between w-full">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            notification.type === 'success' ? 'bg-green-500' :
+                            notification.type === 'error' ? 'bg-red-500' :
+                            notification.type === 'warning' ? 'bg-yellow-500' :
+                            'bg-blue-500'
+                          }`} />
+                          <span className="font-medium text-sm">{notification.title}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">{notification.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(notification.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="ml-2 h-6 w-6 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeNotification(notification.id);
+                        }}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+                
+                <DropdownMenuItem className="p-3 text-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => {
+                      notifications.forEach(n => removeNotification(n.id));
+                    }}
+                  >
+                    Clear All
+                  </Button>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Profile dropdown */}
         <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200 dark:bg-gray-700" />
