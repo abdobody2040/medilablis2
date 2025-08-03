@@ -1,16 +1,60 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
+import { useState } from 'react';
 import { 
   UserPlus, 
   ScanLine, 
   ClipboardList, 
   FileText,
   Activity,
-  AlertTriangle 
+  AlertTriangle,
+  Settings,
+  RefreshCw
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export function QuickActions() {
+  const { user } = useAuth();
+  const [labStatusRefreshing, setLabStatusRefreshing] = useState(false);
+  const [equipmentStatus, setEquipmentStatus] = useState('Online');
+  const [qcStatus, setQcStatus] = useState('Passed');
+  const [reagentStatus, setReagentStatus] = useState('Low');
+
+  const handleRefreshStatus = async () => {
+    setLabStatusRefreshing(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Randomly update statuses for demo
+      const statuses = ['Online', 'Offline', 'Maintenance'];
+      const qcStatuses = ['Passed', 'Failed', 'Pending'];
+      const reagentStatuses = ['Normal', 'Low', 'Critical'];
+      
+      setEquipmentStatus(statuses[Math.floor(Math.random() * statuses.length)]);
+      setQcStatus(qcStatuses[Math.floor(Math.random() * qcStatuses.length)]);
+      setReagentStatus(reagentStatuses[Math.floor(Math.random() * reagentStatuses.length)]);
+    } finally {
+      setLabStatusRefreshing(false);
+    }
+  };
+
+  const handleReagentOrder = () => {
+    // Simulate reagent ordering
+    alert('Reagent Order Initiated\n\nThe following reagents have been ordered:\n• CBC Reagent Kit (x5)\n• Chemistry Panel Reagents (x3)\n• Quality Control Solutions (x2)\n\nEstimated delivery: 2-3 business days\nOrder confirmation will be sent to your email.');
+  };
   const actions = [
     {
       title: 'Register Patient',
@@ -46,24 +90,51 @@ export function QuickActions() {
     },
   ];
 
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'online':
+      case 'passed':
+      case 'normal':
+        return {
+          color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+          indicator: 'bg-green-400',
+        };
+      case 'low':
+      case 'pending':
+        return {
+          color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+          indicator: 'bg-yellow-400',
+        };
+      case 'offline':
+      case 'failed':
+      case 'critical':
+        return {
+          color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+          indicator: 'bg-red-400',
+        };
+      default:
+        return {
+          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+          indicator: 'bg-gray-400',
+        };
+    }
+  };
+
   const labStatus = [
     {
       label: 'Equipment Status',
-      status: 'Online',
-      color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-      indicator: 'bg-green-400',
+      status: equipmentStatus,
+      ...getStatusColor(equipmentStatus),
     },
     {
       label: 'Quality Control',
-      status: 'Passed',
-      color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-      indicator: 'bg-green-400',
+      status: qcStatus,
+      ...getStatusColor(qcStatus),
     },
     {
       label: 'Reagent Levels',
-      status: 'Low',
-      color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-      indicator: 'bg-yellow-400',
+      status: reagentStatus,
+      ...getStatusColor(reagentStatus),
     },
   ];
 
@@ -84,6 +155,27 @@ export function QuickActions() {
                 className={`w-full ${action.color} border rounded-lg p-4 h-auto justify-start transition-colors`}
                 onClick={(e) => {
                   console.log(`Navigating to ${action.title}`);
+                  
+                  // Add role-based access control
+                  if (!user) {
+                    alert('Please log in to access this feature.');
+                    return;
+                  }
+                  
+                  // Simulate role checking
+                  const userRoles = user.roles || [];
+                  const requiredRoles = {
+                    'Register Patient': ['reception', 'admin'],
+                    'Scan Barcode': ['sampling', 'laboratory', 'admin'],
+                    'View Worklist': ['laboratory', 'quality_control', 'admin'],
+                    'Generate Report': ['laboratory', 'admin'],
+                  };
+                  
+                  const required = requiredRoles[action.title as keyof typeof requiredRoles];
+                  if (required && !required.some(role => userRoles.includes(role))) {
+                    alert(`Access denied. This feature requires one of the following roles: ${required.join(', ')}`);
+                    return;
+                  }
                 }}
               >
                 <div className="flex items-center w-full">
@@ -106,9 +198,20 @@ export function QuickActions() {
 
         {/* Lab Status Section */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-          <h4 className="text-sm font-medium text-gray-900 mb-3 dark:text-white">
-            Lab Status
-          </h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+              Lab Status
+            </h4>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefreshStatus}
+              disabled={labStatusRefreshing}
+              className="h-8 w-8 p-0"
+            >
+              <RefreshCw className={`h-4 w-4 ${labStatusRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
           <div className="space-y-2">
             {labStatus.map((item) => (
               <div key={item.label} className="flex items-center justify-between">
@@ -124,25 +227,65 @@ export function QuickActions() {
           </div>
 
           {/* Alert for low reagents */}
-          <div 
-            className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors"
-            onClick={() => {
-              console.log('Low reagent alert clicked');
-              if (confirm('Reagent levels are critically low. Would you like to:\n\n• Order more reagents automatically?\n• View detailed reagent inventory?\n• Set up automatic reorder alerts?')) {
-                alert('Reagent Management\n\nAccessing inventory management where you can:\n• View current reagent levels\n• Place automatic orders\n• Set reorder thresholds\n• Track delivery status\n\nA purchase requisition has been generated for low reagents.');
-              }
-            }}
-          >
-            <div className="flex items-center">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              <span className="ml-2 text-sm font-medium text-yellow-800 dark:text-yellow-400">
-                Reagent levels are low
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
-              Consider restocking before end of day - Click to manage
-            </p>
-          </div>
+          {reagentStatus === 'Low' || reagentStatus === 'Critical' ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <div className={`mt-4 p-3 rounded-lg cursor-pointer transition-colors ${
+                  reagentStatus === 'Critical' 
+                    ? 'bg-red-50 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-700 dark:hover:bg-red-900/30'
+                    : 'bg-yellow-50 border border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:border-yellow-700 dark:hover:bg-yellow-900/30'
+                }`}>
+                  <div className="flex items-center">
+                    <AlertTriangle className={`h-4 w-4 ${
+                      reagentStatus === 'Critical' 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : 'text-yellow-600 dark:text-yellow-400'
+                    }`} />
+                    <span className={`ml-2 text-sm font-medium ${
+                      reagentStatus === 'Critical'
+                        ? 'text-red-800 dark:text-red-400'
+                        : 'text-yellow-800 dark:text-yellow-400'
+                    }`}>
+                      Reagent levels are {reagentStatus.toLowerCase()}
+                    </span>
+                  </div>
+                  <p className={`mt-1 text-xs ${
+                    reagentStatus === 'Critical'
+                      ? 'text-red-700 dark:text-red-300'
+                      : 'text-yellow-700 dark:text-yellow-300'
+                  }`}>
+                    {reagentStatus === 'Critical' 
+                      ? 'Immediate action required - Click to order' 
+                      : 'Consider restocking before end of day - Click to manage'
+                    }
+                  </p>
+                </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reagent Management</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Reagent levels are {reagentStatus.toLowerCase()}. Would you like to take action?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-2 text-sm">
+                  <p>Available actions:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Order reagents automatically</li>
+                    <li>View detailed inventory</li>
+                    <li>Set up reorder alerts</li>
+                    <li>Contact suppliers</li>
+                  </ul>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleReagentOrder}>
+                    Order Now
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
         </div>
       </CardContent>
     </Card>

@@ -1,7 +1,21 @@
 import { QueryClient } from '@tanstack/react-query';
 
-// API request function
-export const apiRequest = async (url: string, options: RequestInit = {}) => {
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// API request helper function
+export async function apiRequest(endpoint: string, options: RequestInit = {}) {
+  const baseUrl = import.meta.env.VITE_API_URL || '/api';
+  const url = `${baseUrl}${endpoint}`;
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -11,26 +25,8 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
   }
 
   return response.json();
-};
-
-// Configure QueryClient with proper defaults
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      queryFn: async ({ queryKey }) => {
-        const [url] = queryKey as [string];
-        return apiRequest(url);
-      },
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+}

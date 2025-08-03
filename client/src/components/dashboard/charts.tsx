@@ -27,78 +27,55 @@ const mockData = {
   ],
 };
 
-export const Charts = () => {
+export function Charts({ stats }: ChartsProps) {
+  if (!stats) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Analytics Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
+            No data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = [
+    { name: 'Daily Samples', value: stats.dailySamples },
+    { name: 'Results Ready', value: stats.resultsReady },
+    { name: 'Pending Tests', value: stats.pendingTests },
+    { name: 'QC Passed', value: stats.qcPassed },
+  ];
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Daily Activity Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockData.dailyStats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="samples" fill="#8884d8" name="Samples" />
-              <Bar dataKey="tests" fill="#82ca9d" name="Tests" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Test Types Distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Test Types Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={mockData.testTypes}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {mockData.testTypes.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Turnaround Time */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Average Turnaround Time (Hours)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockData.turnaroundTime}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="department" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="avg" fill="#8884d8" name="Actual" />
-              <Bar dataKey="target" fill="#82ca9d" name="Target" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Analytics Overview</CardTitle>
+        <CardDescription>
+          Laboratory performance metrics for today
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-64 flex items-center justify-center">
+          <div className="grid grid-cols-2 gap-8 w-full">
+            {chartData.map((item) => (
+              <div key={item.name} className="text-center">
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {item.value}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {item.name}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default Charts;
