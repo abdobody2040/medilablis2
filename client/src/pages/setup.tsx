@@ -114,10 +114,13 @@ export default function Setup() {
     }
     
     try {
+      // Generate a valid UUID for updatedBy - in a real app, get from auth context
+      const updatedBy = crypto.randomUUID();
+      
       // Prepare settings data for database
       const settingsData = {
         ...labSettings,
-        updatedBy: 'current-user-id' // In real app, get from auth context
+        updatedBy
       };
       
       // Save to database using API
