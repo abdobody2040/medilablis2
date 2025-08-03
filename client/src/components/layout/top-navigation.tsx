@@ -80,25 +80,6 @@ export function TopNavigation() {
           <span className="sr-only">Toggle theme</span>
         </Button>
 
-        {/* Test notification button - for demo purposes */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => {
-            const notifications = [
-              { type: 'success' as const, title: 'Test Complete', message: 'Blood test results are ready for John Doe' },
-              { type: 'warning' as const, title: 'QC Alert', message: 'Quality control check needed for Chemistry Analyzer' },
-              { type: 'info' as const, title: 'Sample Received', message: 'New sample registered for patient Emma Smith' },
-              { type: 'error' as const, title: 'Equipment Error', message: 'Hematology analyzer requires maintenance' }
-            ];
-            const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
-            addNotification(randomNotification);
-          }}
-          className="text-xs"
-        >
-          + Test
-        </Button>
-
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
