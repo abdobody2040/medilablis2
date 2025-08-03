@@ -145,16 +145,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Patient routes
+  // Patient routes with pagination
   app.get("/api/patients", async (req, res) => {
     try {
-      const { search } = req.query;
+      const { search, page = '1', limit = '50' } = req.query;
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = Math.min(parseInt(limit as string, 10), 100); // Max 100 per page
+      const offset = (pageNum - 1) * limitNum;
       
       if (search) {
-        const patients = await storage.searchPatients(search as string);
+        const patients = await storage.searchPatients(search as string, limitNum, offset);
         res.json(patients);
       } else {
-        const patients = await storage.getRecentPatients(50);
+        const patients = await storage.getRecentPatients(limitNum, offset);
         res.json(patients);
       }
     } catch (error) {
@@ -201,16 +204,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sample routes
+  // Sample routes with pagination and filtering
   app.get("/api/samples", async (req, res) => {
     try {
-      const { status } = req.query;
+      const { status, page = '1', limit = '50', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = Math.min(parseInt(limit as string, 10), 200); // Max 200 per page for samples
+      const offset = (pageNum - 1) * limitNum;
       
-      if (status) {
-        const samples = await storage.getSamplesByStatus(status as string);
+      if (status && status !== 'all') {
+        const samples = await storage.getSamplesByStatus(status as string, limitNum, offset, sortBy as string, sortOrder as string);
         res.json(samples);
       } else {
-        const samples = await storage.getRecentSamples(50);
+        const samples = await storage.getSamples(limitNum, offset, sortBy as string, sortOrder as string);
         res.json(samples);
       }
     } catch (error) {
@@ -285,11 +291,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User management routes
+  // User management routes with pagination
   app.get("/api/users", async (req, res) => {
     try {
-      // This would need proper authorization in a real app
-      const users = await storage.getUsers(100);
+      const { page = '1', limit = '25', role, search } = req.query;
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = Math.min(parseInt(limit as string, 10), 100); // Max 100 per page
+      const offset = (pageNum - 1) * limitNum;
+
+      const users = await storage.getUsers(limitNum, offset, role as string, search as string);
       res.json(users);
     } catch (error) {
       console.error("Get users error:", error);

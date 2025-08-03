@@ -4,6 +4,8 @@
 
 This is a comprehensive Laboratory Information System (LIS) built as a full-stack web application designed for modern medical laboratories. The system provides complete workflow management from patient registration through sample processing, test result management, quality control, and financial reporting. It features a React-based frontend with a Node.js/Express backend, utilizing PostgreSQL for data persistence and real-time WebSocket communications for live updates.
 
+**Performance Optimized for Unlimited Records**: The system has been comprehensively optimized to handle unlimited numbers of patients, samples, and test results through advanced pagination, database indexing, virtual scrolling, and efficient query optimization techniques.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

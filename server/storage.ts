@@ -16,7 +16,7 @@ import bcrypt from "bcryptjs";
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
-  getUsers(limit: number): Promise<User[]>;
+  getUsers(limit: number, offset?: number, role?: string, search?: string): Promise<User[]>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -28,8 +28,8 @@ export interface IStorage {
   getPatientByPatientId(patientId: string): Promise<Patient | undefined>;
   createPatient(patient: InsertPatient): Promise<Patient>;
   updatePatient(id: string, patient: Partial<InsertPatient>): Promise<Patient>;
-  searchPatients(query: string): Promise<Patient[]>;
-  getRecentPatients(limit: number): Promise<Patient[]>;
+  searchPatients(query: string, limit?: number, offset?: number): Promise<Patient[]>;
+  getRecentPatients(limit: number, offset?: number): Promise<Patient[]>;
 
   // Sample operations
   getSample(id: string): Promise<Sample | undefined>;
@@ -37,8 +37,8 @@ export interface IStorage {
   createSample(sample: InsertSample): Promise<Sample>;
   updateSample(id: string, sample: Partial<InsertSample>): Promise<Sample>;
   getRecentSamples(limit: number): Promise<Array<Sample & { patient: Patient }>>;
-  getSamples(limit?: number): Promise<Array<Sample & { patient: Patient }>>;
-  getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>>;
+  getSamples(limit?: number, offset?: number, sortBy?: string, sortOrder?: string): Promise<Array<Sample & { patient: Patient }>>;
+  getSamplesByStatus(status: string, limit?: number, offset?: number, sortBy?: string, sortOrder?: string): Promise<Array<Sample & { patient: Patient }>>;
   getDailySamplesCount(): Promise<number>;
 
   // Test operations
@@ -109,12 +109,30 @@ export class DatabaseStorage implements IStorage {
         return user || undefined;
     }
 
-  async getUsers(limit: number): Promise<User[]> {
-    return await db
+  async getUsers(limit: number, offset: number = 0, role?: string, search?: string): Promise<User[]> {
+    let query = db
       .select()
-      .from(users)
+      .from(users);
+
+    // Add role filter if specified
+    if (role && role !== 'all') {
+      query = query.where(eq(users.role, role as any));
+    }
+
+    // Add search filter if specified
+    if (search) {
+      query = query.where(
+        like(users.firstName, `%${search}%`) ||
+        like(users.lastName, `%${search}%`) ||
+        like(users.username, `%${search}%`) ||
+        like(users.email, `%${search}%`)
+      );
+    }
+
+    return await query
       .orderBy(desc(users.createdAt))
-      .limit(limit);
+      .limit(limit)
+      .offset(offset);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -175,7 +193,7 @@ export class DatabaseStorage implements IStorage {
     return patient;
   }
 
-  async searchPatients(query: string): Promise<Patient[]> {
+  async searchPatients(query: string, limit: number = 50, offset: number = 0): Promise<Patient[]> {
     return await db
       .select()
       .from(patients)
@@ -184,15 +202,18 @@ export class DatabaseStorage implements IStorage {
         like(patients.lastName, `%${query}%`) ||
         like(patients.patientId, `%${query}%`)
       )
-      .limit(50);
+      .orderBy(desc(patients.createdAt))
+      .limit(limit)
+      .offset(offset);
   }
 
-  async getRecentPatients(limit: number): Promise<Patient[]> {
+  async getRecentPatients(limit: number, offset: number = 0): Promise<Patient[]> {
     return await db
       .select()
       .from(patients)
       .orderBy(desc(patients.createdAt))
-      .limit(limit);
+      .limit(limit)
+      .offset(offset);
   }
 
   async getSample(id: string): Promise<Sample | undefined> {
@@ -236,13 +257,16 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getSamples(limit: number = 50): Promise<Array<Sample & { patient: Patient }>> {
+  async getSamples(limit: number = 50, offset: number = 0, sortBy: string = 'createdAt', sortOrder: string = 'desc'): Promise<Array<Sample & { patient: Patient }>> {
+    const orderByClause = sortOrder === 'asc' ? asc(samples[sortBy as keyof typeof samples] || samples.createdAt) : desc(samples[sortBy as keyof typeof samples] || samples.createdAt);
+    
     const result = await db
       .select()
       .from(samples)
       .leftJoin(patients, eq(samples.patientId, patients.id))
-      .orderBy(desc(samples.createdAt))
-      .limit(limit);
+      .orderBy(orderByClause)
+      .limit(limit)
+      .offset(offset);
 
     return result.map(row => ({
       ...row.samples,
@@ -282,25 +306,31 @@ export class DatabaseStorage implements IStorage {
         isOnIronVitamins: false,
         ironVitaminsDose: null,
         ironVitaminsDuration: null,
+        medicalHistory: null,
+        medications: null,
         createdAt: new Date(),
         updatedAt: new Date()
       }
     }));
   }
 
-  async getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>> {
+  async getSamplesByStatus(status: string, limit: number = 50, offset: number = 0, sortBy: string = 'createdAt', sortOrder: string = 'desc'): Promise<Array<Sample & { patient: Patient }>> {
     // Validate that the status is a valid enum value
     const validStatuses = ['received', 'in_progress', 'completed', 'rejected', 'cancelled'];
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid sample status: ${status}`);
     }
 
+    const orderByClause = sortOrder === 'asc' ? asc(samples[sortBy as keyof typeof samples] || samples.createdAt) : desc(samples[sortBy as keyof typeof samples] || samples.createdAt);
+
     const result = await db
       .select()
       .from(samples)
       .innerJoin(patients, eq(samples.patientId, patients.id))
       .where(eq(samples.status, status as any))
-      .orderBy(desc(samples.createdAt));
+      .orderBy(orderByClause)
+      .limit(limit)
+      .offset(offset);
 
     return result.map(row => ({
       ...row.samples,

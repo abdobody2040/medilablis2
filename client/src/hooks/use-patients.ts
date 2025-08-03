@@ -3,14 +3,27 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from './use-toast';
 import type { Patient } from '@/types';
 
-export function usePatients() {
+export interface PatientsQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export function usePatients(params: PatientsQueryParams = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { page = 1, limit = 50, search } = params;
+  
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(search && { search }),
+  });
 
   const patientsQuery = useQuery({
-    queryKey: ['/api/patients'],
-    queryFn: async ({ queryKey }) => {
-      const response = await fetch(queryKey[0], { credentials: 'include' });
+    queryKey: ['/api/patients', page, limit, search],
+    queryFn: async () => {
+      const response = await fetch(`/api/patients?${queryParams}`, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch patients');
       return response.json();
     },

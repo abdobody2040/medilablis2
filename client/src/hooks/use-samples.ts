@@ -4,15 +4,32 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from './use-toast';
 import type { Sample } from '@/types';
 
-export function useSamples() {
+export interface SamplesQueryParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export function useSamples(params: SamplesQueryParams = {}) {
   const queryClient = useQueryClient();
   const { samples, setSamples, addSample, updateSample } = useSamplesStore();
   const { toast } = useToast();
+  const { page = 1, limit = 50, status = 'all', sortBy = 'createdAt', sortOrder = 'desc' } = params;
+  
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(status !== 'all' && { status }),
+    sortBy,
+    sortOrder,
+  });
 
   const samplesQuery = useQuery({
-    queryKey: ['/api/samples'],
-    queryFn: async ({ queryKey }) => {
-      const response = await fetch(queryKey[0], { credentials: 'include' });
+    queryKey: ['/api/samples', page, limit, status, sortBy, sortOrder],
+    queryFn: async () => {
+      const response = await fetch(`/api/samples?${queryParams}`, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch samples');
       const data = await response.json();
       setSamples(data);

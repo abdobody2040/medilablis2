@@ -6,23 +6,34 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/use-pagination';
 import { Search, TestTube, Beaker, ScanLine } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { SAMPLE_STATUSES } from '@/lib/constants';
 
 export default function Sampling() {
-  const { samples, isLoading } = useSamples();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  const [pagination, paginationControls] = usePagination(50);
+  
+  const { samples, isLoading } = useSamples({
+    page: pagination.page,
+    limit: pagination.limit,
+    status: statusFilter,
+    sortBy,
+    sortOrder,
+  });
 
+  // For client-side search filtering (we'll implement server-side search later)
   const filteredSamples = samples.filter(sample => {
     const matchesSearch = searchQuery === '' || 
-      sample.sampleId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (sample.patient && `${sample.patient.firstName} ${sample.patient.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()));
+      sample.sampleId.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || sample.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const getStatusBadge = (status: string) => {
@@ -234,6 +245,16 @@ export default function Sampling() {
                       ))}
                     </tbody>
                   </table>
+                  
+                  {/* Add Pagination Controls */}
+                  <div className="mt-6">
+                    <Pagination 
+                      pagination={pagination}
+                      controls={paginationControls}
+                      showPageSizeSelector={true}
+                      pageSizeOptions={[25, 50, 100, 200]}
+                    />
+                  </div>
                 </div>
               )}
             </CardContent>
