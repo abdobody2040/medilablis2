@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from './use-toast';
 
@@ -18,9 +17,9 @@ export function useWebSocket() {
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
+
       wsRef.current = new WebSocket(wsUrl);
-      
+
       wsRef.current.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
@@ -30,12 +29,12 @@ export function useWebSocket() {
           reconnectTimeoutRef.current = null;
         }
       };
-      
+
       wsRef.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
           setLastMessage(message);
-          
+
           // Handle different message types
           switch (message.type) {
             case 'patient_registered':
@@ -61,11 +60,11 @@ export function useWebSocket() {
           console.error('Failed to parse WebSocket message:', error);
         }
       };
-      
+
       wsRef.current.onclose = (event) => {
         console.log('WebSocket disconnected', event.code, event.reason);
         setIsConnected(false);
-        
+
         // Only attempt to reconnect if the connection wasn't closed intentionally
         if (event.code !== 1000) {
           reconnectTimeoutRef.current = setTimeout(() => {
@@ -74,7 +73,7 @@ export function useWebSocket() {
           }, 3000);
         }
       };
-      
+
       wsRef.current.onerror = (error) => {
         console.log('WebSocket error:', error);
         setIsConnected(false);
@@ -90,7 +89,7 @@ export function useWebSocket() {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (wsRef.current) {
       wsRef.current.close(1000, 'Component unmounting');
       wsRef.current = null;
@@ -100,7 +99,7 @@ export function useWebSocket() {
 
   useEffect(() => {
     connect();
-    
+
     return () => {
       disconnect();
     };

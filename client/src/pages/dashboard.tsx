@@ -15,7 +15,7 @@ export default function Dashboard() {
     error: statsError 
   } = useQuery({
     queryKey: ['dashboard-stats'],
-    queryFn: () => dashboardApi.getStats(),
+    queryFn: dashboardApi.getStats,
   });
 
   const { 
