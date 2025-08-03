@@ -37,6 +37,7 @@ export interface IStorage {
   createSample(sample: InsertSample): Promise<Sample>;
   updateSample(id: string, sample: Partial<InsertSample>): Promise<Sample>;
   getRecentSamples(limit: number): Promise<Array<Sample & { patient: Patient }>>;
+  getSamples(limit?: number): Promise<Array<Sample & { patient: Patient }>>;
   getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>>;
   getDailySamplesCount(): Promise<number>;
 
@@ -232,6 +233,29 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => ({
       ...row.samples,
       patient: row.patients
+    }));
+  }
+
+  async getSamples(limit: number = 50): Promise<Array<Sample & { patient: Patient }>> {
+    const result = await db
+      .select()
+      .from(samples)
+      .leftJoin(patients, eq(samples.patientId, patients.id))
+      .orderBy(desc(samples.createdAt))
+      .limit(limit);
+
+    return result.map(row => ({
+      ...row.samples,
+      patient: row.patients || {
+        id: '',
+        patientId: 'Unknown',
+        firstName: 'Unknown',
+        lastName: 'Patient',
+        dateOfBirth: new Date(),
+        gender: 'unknown' as const,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }));
   }
 

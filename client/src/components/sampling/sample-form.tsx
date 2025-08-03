@@ -85,52 +85,59 @@ export function SampleForm() {
     e.preventDefault();
     console.log('Creating sample:', form);
 
-    try {
-      // Get current user from localStorage for collectedBy field
-      // const currentUser = JSON.parse(localStorage.getItem('user') || '{}'); // localStorage is not available in server components
+    if (!form.patientId) {
+      toast({
+        variant: "destructive",
+        title: "Patient required",
+        description: "Please select a patient first",
+      });
+      return;
+    }
 
+    if (!form.sampleType) {
+      toast({
+        variant: "destructive",
+        title: "Sample type required",
+        description: "Please specify the sample type",
+      });
+      return;
+    }
+
+    try {
       const sampleData = {
         ...form,
-        collectedBy: user?.id || 'default-user-id', //currentUser.id || 'default-user-id',
-        collectionDateTime: new Date(form.collectionDateTime),
+        collectedBy: user?.id || 'default-user-id',
+        collectionDateTime: new Date(form.collectionDateTime || new Date()),
         receivedDateTime: new Date(),
         volume: form.volume ? parseFloat(form.volume) : null,
         status: 'received' as const,
         priority: form.priority as 'routine' | 'urgent' | 'stat' | 'critical',
-        unit: 'ml', // Default unit
+        unit: 'ml',
       };
 
-      createSample(sampleData, {
-        onSuccess: () => {
-          setForm({
-            sampleId: generateSampleId(),
-            patientId: '',
-            sampleType: '',
-            containerType: '',
-            volume: '',
-            unit: 'ml',
-            collectionDateTime: '',
-            priority: 'routine',
-            comments: '',
-            storageLocation: '',
-            barcode: generateBarcode(),
-          });
-          setSelectedPatient(null);
-          setPatientSearch('');
-          toast({
-            title: "Sample created successfully",
-            description: `Sample ${form.sampleId} has been registered.`,
-          });
-        },
-        onError: (error) => {
-          toast({
-            variant: "destructive",
-            title: "Error creating sample",
-            description: error.message || "Failed to create sample",
-          });
-        }
+      createSample(sampleData);
+      
+      // Clear form after successful submission
+      setForm({
+        sampleId: generateSampleId(),
+        patientId: '',
+        sampleType: '',
+        containerType: '',
+        volume: '',
+        unit: 'ml',
+        collectionDateTime: '',
+        priority: 'routine',
+        comments: '',
+        storageLocation: '',
+        barcode: generateBarcode(),
       });
-
+      setSelectedPatient(null);
+      setPatientSearch('');
+      
+      toast({
+        title: "Sample created successfully",
+        description: `Sample ${form.sampleId} has been registered.`,
+      });
     } catch (error) {
       console.error('Sample creation error:', error);
       toast({

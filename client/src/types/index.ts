@@ -35,6 +35,10 @@ export interface Sample {
   patient?: Patient;
 }
 
+export interface SampleWithPatient extends Sample {
+  patient: Patient;
+}
+
 export interface DashboardStats {
   dailySamples: number;
   resultsReady: number;
