@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users", async (req, res) => {
     try {
       // This would need proper authorization in a real app
-      const users = await storage.getRecentPatients(100); // Placeholder
+      const users = await storage.getUsers(100);
       res.json(users);
     } catch (error) {
       console.error("Get users error:", error);

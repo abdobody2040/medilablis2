@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,18 +8,23 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
 
 export default function UserManagement() {
-  const [users, setUsers] = useState([
-    {
-      id: '1',
-      username: 'admin',
-      email: 'admin@lab.com',
-      firstName: 'System',
-      lastName: 'Administrator',
-      role: 'admin',
-      isActive: true,
-      lastLogin: new Date().toISOString(),
-    }
-  ]);
+  const [users, setUsers] = useState([]);
+
+  // Load users on component mount
+  React.useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const usersData = await response.json();
+          setUsers(usersData);
+        }
+      } catch (error) {
+        console.error('Failed to load users:', error);
+      }
+    };
+    loadUsers();
+  }, []);
 
   const [newUser, setNewUser] = useState({
     username: '',
@@ -43,7 +48,7 @@ export default function UserManagement() {
         },
         body: JSON.stringify({
           ...newUser,
-          createdBy: 'current-user-id', // In real app, get from auth context
+          createdBy: 'system', // Use system for now since we don't have auth context
         }),
       });
 
@@ -53,7 +58,13 @@ export default function UserManagement() {
       }
 
       const createdUser = await response.json();
-      setUsers(prev => [...prev, createdUser]);
+      
+      // Reload users list to get updated data
+      const usersResponse = await fetch('/api/users');
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        setUsers(usersData);
+      }
 
       alert(`User created successfully!\n\nUsername: ${createdUser.username}\nRole: ${createdUser.role}`);
 
