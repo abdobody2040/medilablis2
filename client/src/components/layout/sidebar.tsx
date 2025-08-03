@@ -73,33 +73,33 @@ export function Sidebar() {
                   {NAVIGATION_ITEMS.map((item) => {
                     const Icon = iconMap[item.icon as keyof typeof iconMap];
                     const active = isActive(item.href);
-                    
+
                     return (
                       <li key={item.name}>
                         <Link href={item.href}>
-                          <a className={cn(
-                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+                          <div className={cn(
+                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold cursor-pointer',
                             active
                               ? 'bg-primary/10 text-primary dark:bg-primary/20'
                               : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
                           )}>
                             {Icon && <Icon className="h-5 w-5 shrink-0" />}
                             {item.name}
-                          </a>
+                          </div>
                         </Link>
                       </li>
                     );
                   })}
                 </ul>
               </li>
-              
+
               {isAdmin && (
                 <li className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <ul role="list" className="-mx-2 space-y-1">
                     {ADMIN_NAVIGATION_ITEMS.map((item) => {
                       const Icon = iconMap[item.icon as keyof typeof iconMap];
                       const active = isActive(item.href);
-                      
+
                       return (
                         <li key={item.name}>
                           <Link 
@@ -151,7 +151,7 @@ export function Sidebar() {
                   {NAVIGATION_ITEMS.map((item) => {
                     const Icon = iconMap[item.icon as keyof typeof iconMap];
                     const active = isActive(item.href);
-                    
+
                     return (
                       <li key={item.name}>
                         <Link 
@@ -172,14 +172,14 @@ export function Sidebar() {
                   })}
                 </ul>
               </li>
-              
+
               {isAdmin && (
                 <li className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <ul role="list" className="-mx-2 space-y-1">
                     {ADMIN_NAVIGATION_ITEMS.map((item) => {
                       const Icon = iconMap[item.icon as keyof typeof iconMap];
                       const active = isActive(item.href);
-                      
+
                       return (
                         <li key={item.name}>
                           <Link 

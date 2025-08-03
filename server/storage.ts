@@ -21,7 +21,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
   validateUserPassword(username: string, password: string): Promise<User | null>;
-  
+
   // Patient operations
   getPatient(id: string): Promise<Patient | undefined>;
   getPatientByPatientId(patientId: string): Promise<Patient | undefined>;
@@ -29,7 +29,7 @@ export interface IStorage {
   updatePatient(id: string, patient: Partial<InsertPatient>): Promise<Patient>;
   searchPatients(query: string): Promise<Patient[]>;
   getRecentPatients(limit: number): Promise<Patient[]>;
-  
+
   // Sample operations
   getSample(id: string): Promise<Sample | undefined>;
   getSampleBySampleId(sampleId: string): Promise<Sample | undefined>;
@@ -38,23 +38,23 @@ export interface IStorage {
   getRecentSamples(limit: number): Promise<Array<Sample & { patient: Patient }>>;
   getSamplesByStatus(status: string): Promise<Array<Sample & { patient: Patient }>>;
   getDailySamplesCount(): Promise<number>;
-  
+
   // Test operations
   getTestTypes(): Promise<TestType[]>;
   createTestType(testType: InsertTestType): Promise<TestType>;
   createTestRequest(testRequest: InsertTestRequest): Promise<TestRequest>;
   getTestRequestsForSample(sampleId: string): Promise<TestRequest[]>;
   getPendingTestsCount(): Promise<number>;
-  
+
   // Results operations
   createTestResult(result: InsertTestResult): Promise<TestResult>;
   getTestResults(testRequestId: string): Promise<TestResult[]>;
   getCompletedResultsCount(): Promise<number>;
-  
+
   // Quality Control operations
   createQualityControl(qc: InsertQualityControl): Promise<QualityControl>;
   getRecentQualityControls(limit: number): Promise<Array<QualityControl & { testType: TestType }>>;
-  
+
   // Dashboard statistics
   getDashboardStats(): Promise<{
     dailySamples: number;
@@ -82,6 +82,8 @@ export interface IStorage {
   createReport(report: InsertReport): Promise<Report>;
   getReports(limit?: number): Promise<Array<Report & { generatedBy: User }>>;
   updateReportStatus(id: string, status: string, filePath?: string, fileSize?: number): Promise<void>;
+
+    getUserById(id: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -100,6 +102,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+    async getUserById(id: string): Promise<User | undefined> {
+        const [user] = await db.select().from(users).where(eq(users.id, id));
+        return user || undefined;
+    }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const hashedPassword = await bcrypt.hash(insertUser.password, 12);
     const [user] = await db
@@ -114,7 +121,7 @@ export class DatabaseStorage implements IStorage {
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 12);
     }
-    
+
     const [user] = await db
       .update(users)
       .set({ ...updateData, updatedAt: new Date() })
@@ -126,7 +133,7 @@ export class DatabaseStorage implements IStorage {
   async validateUserPassword(username: string, password: string): Promise<User | null> {
     const user = await this.getUserByUsername(username);
     if (!user) return null;
-    
+
     const isValid = await bcrypt.compare(password, user.password);
     return isValid ? user : null;
   }
@@ -225,7 +232,7 @@ export class DatabaseStorage implements IStorage {
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid sample status: ${status}`);
     }
-    
+
     const result = await db
       .select()
       .from(samples)
@@ -242,12 +249,12 @@ export class DatabaseStorage implements IStorage {
   async getDailySamplesCount(): Promise<number> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const [result] = await db
       .select({ count: count() })
       .from(samples)
       .where(gte(samples.receivedDateTime, today));
-    
+
     return result.count;
   }
 
@@ -288,7 +295,7 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(testRequests)
       .where(eq(testRequests.status, "pending"));
-    
+
     return result.count;
   }
 
@@ -311,7 +318,7 @@ export class DatabaseStorage implements IStorage {
   async getCompletedResultsCount(): Promise<number> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const [result] = await db
       .select({ count: count() })
       .from(testRequests)
@@ -321,7 +328,7 @@ export class DatabaseStorage implements IStorage {
           gte(testRequests.completedDateTime, today)
         )
       );
-    
+
     return result.count;
   }
 
@@ -355,7 +362,7 @@ export class DatabaseStorage implements IStorage {
   }> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const [dailySamples] = await db
       .select({ count: count() })
       .from(samples)

@@ -106,17 +106,17 @@ export default function Setup() {
   const handleLabSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Saving lab settings:', labSettings);
-    
+
     // Validate required fields
     if (!labSettings.labName || !labSettings.licenseNumber || !labSettings.director) {
       alert('Please fill in all required fields (Lab Name, License Number, Director)');
       return;
     }
-    
+
     try {
       // Get the current user from auth context
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
+
       if (!currentUser.id) {
         alert('Please log in to save settings. Your session may have expired.');
         // Clear potentially stale user data
@@ -124,19 +124,37 @@ export default function Setup() {
         window.location.href = '/login';
         return;
       }
-      
+
+      // Validate that the user exists by checking authentication
+      try {
+        const response = await fetch('/api/auth/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser.id })
+        });
+
+        if (!response.ok) {
+          throw new Error('User validation failed');
+        }
+      } catch (authError) {
+        alert('Your user session is invalid. Please log in again.');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return;
+      }
+
       // Prepare settings data for database
       const settingsData = {
         ...labSettings,
         updatedBy: currentUser.id
       };
-      
+
       // Save to database using API
       const { settingsApi } = await import('@/lib/api');
       const savedSettings = await settingsApi.saveLabSettings(settingsData);
-      
+
       console.log('Lab Settings Saved to Database:', savedSettings);
-      
+
       alert(`Laboratory Settings Saved to Database!\n\n` +
         `Database ID: ${savedSettings.id}\n` +
         `Lab Name: ${savedSettings.labName}\n` +
@@ -144,10 +162,10 @@ export default function Setup() {
         `Director: ${savedSettings.director}\n` +
         `Last Updated: ${new Date(savedSettings.updatedAt).toLocaleString()}\n\n` +
         `Settings have been permanently saved to the database.`);
-      
+
     } catch (error) {
       console.error('Lab settings save error:', error);
-      
+
       // Handle specific error types
       if (error instanceof Error) {
         if (error.message.includes('foreign key constraint') || error.message.includes('user')) {
@@ -166,10 +184,10 @@ export default function Setup() {
   const handleTestConfigSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Saving test configuration:', testConfig);
-    
+
     // Simulate test configuration save since we don't have specific test fields in state
     console.log('Test configuration would save with:', testConfig);
-    
+
     alert(`Test Configuration Saved Successfully!\n\n` +
       `Default TAT: ${testConfig.defaultTurnaround} hours\n` +
       `Urgent TAT: ${testConfig.urgentTurnaround} hours\n` +
@@ -184,15 +202,15 @@ export default function Setup() {
   const handleSystemSettingsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Saving system settings:', systemSettings);
-    
+
     const savedSystemSettings = {
       ...systemSettings,
       lastUpdated: new Date().toLocaleString(),
       updatedBy: 'Current User'
     };
-    
+
     console.log('System Settings Saved:', savedSystemSettings);
-    
+
     alert(`System Settings Saved Successfully!\n\n` +
       `Auto-backup: ${savedSystemSettings.autoBackup ? 'Enabled' : 'Disabled'}\n` +
       `Backup Frequency: ${savedSystemSettings.backupFrequency}\n` +
@@ -205,7 +223,7 @@ export default function Setup() {
 
   const handleBackupNow = () => {
     console.log('Initiating backup...');
-    
+
     const backupInfo = {
       backupId: `BACKUP-${Date.now()}`,
       timestamp: new Date().toLocaleString(),
@@ -213,7 +231,7 @@ export default function Setup() {
       estimatedSize: '2.3 GB',
       estimatedTime: '15-20 minutes'
     };
-    
+
     alert(`System Backup Initiated!\n\n` +
       `Backup ID: ${backupInfo.backupId}\n` +
       `Type: ${backupInfo.type}\n` +
@@ -322,7 +340,7 @@ export default function Setup() {
                       placeholder="Laboratory name"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="director">Laboratory Director *</Label>
                     <Input
@@ -359,7 +377,7 @@ export default function Setup() {
                       placeholder="(555) 123-4567"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="email">Email *</Label>
                     <Input
@@ -371,7 +389,7 @@ export default function Setup() {
                       placeholder="contact@lab.com"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="website">Website</Label>
                     <Input
@@ -396,7 +414,7 @@ export default function Setup() {
                       placeholder="License number"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="accreditation">Accreditation</Label>
                     <Select value={labSettings.accreditation} onValueChange={(value) => setLabSettings(prev => ({ ...prev, accreditation: value }))}>
@@ -412,7 +430,7 @@ export default function Setup() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="timezone">Timezone *</Label>
                     <Select value={labSettings.timezone} onValueChange={(value) => setLabSettings(prev => ({ ...prev, timezone: value }))}>
@@ -463,7 +481,7 @@ export default function Setup() {
                       placeholder="24"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="urgentTurnaround">Urgent Turnaround (hours) *</Label>
                     <Input
@@ -475,7 +493,7 @@ export default function Setup() {
                       placeholder="4"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="statTurnaround">STAT Turnaround (hours) *</Label>
                     <Input
@@ -493,7 +511,7 @@ export default function Setup() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Result Processing</h3>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -506,7 +524,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setTestConfig(prev => ({ ...prev, autoApprove: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="requireVerification">Require verification for critical results</Label>
@@ -518,7 +536,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setTestConfig(prev => ({ ...prev, requireVerification: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="enableCriticalAlerts">Enable critical value alerts</Label>
@@ -659,7 +677,7 @@ export default function Setup() {
               <form onSubmit={handleSystemSettingsSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Backup & Maintenance</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -672,7 +690,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, autoBackup: checked }))}
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="backupFrequency">Backup Frequency</Label>
                       <Select value={systemSettings.backupFrequency} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, backupFrequency: value }))}>
@@ -686,7 +704,7 @@ export default function Setup() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="retentionPeriod">Retention Period (days)</Label>
                       <Input
@@ -704,7 +722,7 @@ export default function Setup() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Security Settings</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -717,7 +735,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, enableAuditLog: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="enableTwoFactor">Two-Factor Authentication</Label>
@@ -730,7 +748,7 @@ export default function Setup() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
@@ -742,7 +760,7 @@ export default function Setup() {
                         placeholder="30"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="passwordComplexity">Password Complexity</Label>
                       <Select value={systemSettings.passwordComplexity} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, passwordComplexity: value }))}>
@@ -763,7 +781,7 @@ export default function Setup() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">System Maintenance</h3>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <Label htmlFor="maintenanceMode">Maintenance Mode</Label>
@@ -775,7 +793,7 @@ export default function Setup() {
                       onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, maintenanceMode: checked }))}
                     />
                   </div>
-                  
+
                   {systemSettings.maintenanceMode && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700">
                       <div className="flex items-center">
@@ -811,7 +829,7 @@ export default function Setup() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Email Notifications</h3>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -831,7 +849,7 @@ export default function Setup() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Alert Types</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -844,7 +862,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, criticalAlerts: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="qcFailures">QC Failures</Label>
@@ -856,7 +874,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, qcFailures: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="equipmentAlerts">Equipment Alerts</Label>
@@ -868,7 +886,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, equipmentAlerts: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="reportReady">Report Ready</Label>
@@ -880,7 +898,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, reportReady: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="overdueResults">Overdue Results</Label>
@@ -892,7 +910,7 @@ export default function Setup() {
                         onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, overdueResults: checked }))}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="lowReagents">Low Reagent Levels</Label>
@@ -911,13 +929,13 @@ export default function Setup() {
                   <Button
                     onClick={() => {
                       console.log('Saving notification settings:', notificationSettings);
-                      
+
                       const savedNotifications = {
                         ...notificationSettings,
                         lastUpdated: new Date().toLocaleString(),
                         updatedBy: 'Current User'
                       };
-                      
+
                       alert(`Notification Settings Saved!\n\n` +
                         `Email Notifications: ${savedNotifications.emailNotifications ? 'Enabled' : 'Disabled'}\n` +
                         `Critical Alerts: ${savedNotifications.criticalAlerts ? 'Enabled' : 'Disabled'}\n` +

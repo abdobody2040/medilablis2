@@ -103,6 +103,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/auth/validate", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID required" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ valid: true, user: { id: user.id, username: user.username } });
+    } catch (error) {
+      console.error("User validation error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Dashboard routes
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
